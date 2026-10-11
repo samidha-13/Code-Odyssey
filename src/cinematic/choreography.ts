@@ -21,7 +21,7 @@ export const CHOREO = {
 
   // about rises through the deep water beyond the helmet (hero film's last third)
   about: { track: [0.175, 0.318] as const },
-  log: { header: [0.342, 0.36, 0.452, 0.472] as const, track: [0.346, 0.468] as const },
+  log: { header: [0.342, 0.36, 0.452, 0.472] as const, track: [0.346, 0.43] as const },
   deck: { track: [0.775, 0.97] as const },
 } as const;
 

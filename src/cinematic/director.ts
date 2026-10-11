@@ -140,7 +140,7 @@ export class Director {
   ) {
     this.r = renderer;
     this.mobile = mobile;
-    this.atmos = new Particles(particleCanvas, mobile ? 46 : 80);
+    this.atmos = new Particles(particleCanvas, mobile ? 0 : 0);
     const set = mobile ? 'm' : 'd';
     this.films = {
       hero: new Film('hero', FILMS.hero.frames, set),
