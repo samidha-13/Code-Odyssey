@@ -190,8 +190,8 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 40% at 50% 34%, rgb(30 12 2 / 0.32), transparent 72%),
-    linear-gradient(180deg, rgb(10 6 10 / 0.28), transparent 26%);
+    radial-gradient(60% 40% at 50% 34%, rgb(30 12 2 / 0.32), transparent 100%),
+    linear-gradient(180deg, rgb(10 6 10 / 0.28), transparent 100%);
 }
 .intro-line {
   position: absolute;
@@ -395,11 +395,11 @@ body {
   will-change: opacity;
 }
 .deck-item[data-side='l'] {
-  margin-left: max(4.5vw, 1.25rem);
+  margin-left: max(8vw, 8rem);
 }
 .deck-item[data-side='r'] {
   margin-left: auto;
-  margin-right: max(4.5vw, 1.25rem);
+  margin-right: max(8vw, 8rem);
   text-align: right;
 }
 .deck-item:last-child {
@@ -409,14 +409,14 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
-  font-size: 0.64rem;
+  font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: 0.42em;
   text-transform: uppercase;
   color: var(--color-bronze-light);
 }
 .deck-title {
-  margin-top: 0.9rem;
+  margin-top: 1.2rem;
   font-family: var(--font-display);
   font-weight: 500;
   font-size: clamp(1.6rem, 2.4vw, 2.4rem);
@@ -483,7 +483,7 @@ body {
   list-style: none;
   padding: 0;
   font-family: var(--font-serif);
-  font-size: 1.08rem;
+  font-size: 1.2rem;
   line-height: 1.45;
   color: rgb(241 232 214 / 0.9);
 }
@@ -586,7 +586,7 @@ body {
     gap: 0.7rem;
   }
   .deck-body {
-    font-size: 1.02rem;
+    font-size: 1.1rem;
   }
 }
 
