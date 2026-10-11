@@ -6,8 +6,8 @@ import { useActiveSection } from '../hooks/useActiveSection';
 
 export const NAV_ITEMS = [
   { id: 'home', label: 'Home' },
-  { id: 'timeline', label: 'Timeline' },
   { id: 'about', label: 'About' },
+  { id: 'timeline', label: 'Timeline' },
   { id: 'sponsors', label: 'Sponsors' },
   { id: 'register', label: 'Register' },
 ] as const;

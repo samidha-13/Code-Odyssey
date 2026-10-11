@@ -15,18 +15,17 @@ export type Milestone = {
 export const TIMELINE: Milestone[] = [
   {
     id: 'registrations-close',
-    title: 'Registrations Close',
+    title: 'Registrations Closed',
     when: 'Saturday · 12:00 AM (midnight)',
     confirmed: false,
-    note: 'Calendar date to be announced',
-    detail: 'The registration deadline. Teams must be registered before midnight.',
+    detail: 'Registrations are now closed.',
   },
   {
     id: 'shortlist',
     title: 'Shortlisted Teams Announced',
     when: 'Sunday night',
     confirmed: false,
-    note: 'Calendar date to be announced',
+    note: 'Onboarding teams — to be announced soon',
     detail: 'Announced on the official website and on Instagram @csi_kjsit.',
   },
   {

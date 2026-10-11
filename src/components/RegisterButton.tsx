@@ -3,8 +3,8 @@ import { navigateTo } from '../hooks/navigate';
 
 /**
  * Registration call-to-action. Links to the configured URL when registration
- * is open; otherwise it takes visitors to the Register section, which
- * explains the current status. It never points at an invented URL.
+ * is open; when registrations are closed it stays visible but disabled.
+ * It never points at an invented URL.
  */
 export function RegisterButton({ className = '' }: { className?: string }) {
   const { url, status } = EVENT.registration;
@@ -14,6 +14,15 @@ export function RegisterButton({ className = '' }: { className?: string }) {
       <path d="M0 5h16M12 1l4 4-4 4" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
+  if (status === 'closed') {
+    // shown, but the registration action is disabled
+    return (
+      <button type="button" className={`btn-voyage ${className}`} data-state="closed" disabled aria-disabled="true" title="Registrations are closed">
+        {label}
+        {arrow}
+      </button>
+    );
+  }
   if (status === 'open' && url) {
     return (
       <a className={`btn-voyage ${className}`} href={url} target="_blank" rel="noopener noreferrer">

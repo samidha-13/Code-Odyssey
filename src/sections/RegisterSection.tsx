@@ -28,7 +28,7 @@ export function RegisterSection() {
       </div>
       <SectionTransition variant="deck-to-shore" />
 
-      <div className="relative mx-auto flex min-h-[100svh] max-w-[64rem] flex-col items-center justify-center px-5 py-36 text-center sm:px-8">
+      <div className="relative mx-auto flex min-h-[100svh] max-w-[64rem] flex-col items-center justify-center px-5 py-28 text-center sm:px-8 sm:py-36">
         <p className="eyebrow justify-center text-bronze-light" data-reveal="drift">
           Landfall
         </p>
@@ -41,13 +41,13 @@ export function RegisterSection() {
           </span>
         </h2>
 
+        <div className="mt-10" data-reveal="drift">
+          <RegisterButton />
+        </div>
+
         <p className="mt-10 max-w-xl text-[0.98rem] leading-relaxed text-ivory/80" data-reveal="drift">
           {EVENT.format} · {EVENT.dates.display}. {EVENT.rules.teamSize} {EVENT.rules.diversity}
         </p>
-
-        <div className="mt-12" data-reveal="drift">
-          <RegisterButton />
-        </div>
 
         <dl className="mt-14 grid w-full max-w-2xl gap-6 border-y border-ivory/15 py-7 text-left sm:grid-cols-2" data-reveal="drift">
           <div>
@@ -61,6 +61,13 @@ export function RegisterSection() {
             <dd className="mt-2 font-serif text-xl text-ivory">{deadline}</dd>
           </div>
         </dl>
+
+        <div className="mt-12 w-full max-w-2xl px-1 text-center" data-reveal="drift">
+          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.34em] text-bronze-light">{EVENT.shortlist.title}</p>
+          <p className="mt-3 font-display text-[clamp(1.15rem,3.6vw,1.9rem)] uppercase leading-tight tracking-[0.05em] text-ivory [overflow-wrap:anywhere]">
+            {EVENT.shortlist.status}
+          </p>
+        </div>
 
         <p className="mt-8 text-sm text-ivory/70" data-reveal="drift">
           Follow{' '}

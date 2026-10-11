@@ -6,6 +6,9 @@
 type RegistrationStatus = 'open' | 'coming-soon' | 'closed';
 
 const registrationUrl = (import.meta.env.VITE_REGISTRATION_URL as string | undefined)?.trim() || null;
+/** Registrations for CO5 are closed; VITE_REGISTRATION_STATUS=open (with a URL) re-opens them. */
+const reopen = (import.meta.env.VITE_REGISTRATION_STATUS as string | undefined)?.trim().toLowerCase() === 'open';
+const REGISTRATION_CLOSED = !(reopen && registrationUrl);
 
 export const EVENT = {
   name: 'Code Odyssey 5.0',
@@ -44,9 +47,14 @@ export const EVENT = {
 
   registration: {
     /** Set VITE_REGISTRATION_URL (see .env.example) to open registration. */
-    url: registrationUrl,
-    status: (registrationUrl ? 'open' : 'coming-soon') as RegistrationStatus,
+    url: REGISTRATION_CLOSED ? null : registrationUrl,
+    status: (REGISTRATION_CLOSED ? 'closed' : 'open') as RegistrationStatus,
     deadline: 'Saturday, 12:00 AM (midnight)',
+  },
+
+  shortlist: {
+    title: 'Shortlisted Teams',
+    status: 'Onboarding teams — to be announced soon',
   },
 
   social: {
@@ -59,7 +67,7 @@ export const registrationLabel = () => {
     case 'open':
       return 'Register now';
     case 'closed':
-      return 'Registrations closed';
+      return 'Registration';
     default:
       return 'Registrations opening soon';
   }

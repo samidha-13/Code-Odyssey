@@ -22,6 +22,7 @@ export type TextKey =
   | 'introMeta'
   | 'introScrim'
   | 'hint'
+  | 'aboutTrack'
   | 'logHeader'
   | 'logTrack'
   | 'deckTrack'
@@ -124,9 +125,10 @@ export class Director {
   private films: Record<FilmKey, Film>;
   private W = 1;
   private H = 1;
+  private about: Track = { items: [], startY: 0, endY: 0, range: K.about.track };
   private log: Track = { items: [], startY: 0, endY: 0, range: K.log.track };
   private deck: Track = { items: [], startY: 0, endY: 0, range: K.deck.track };
-  private chapterP: Record<Chapter, number> = { home: 0, timeline: 0.36, about: 0.8, sponsors: 0.9, register: 0.97 };
+  private chapterP: Record<Chapter, number> = { home: 0, about: 0.25, timeline: 0.36, sponsors: 0.9, register: 0.94 };
   private mobile: boolean;
   portrait = false;
 
@@ -202,7 +204,9 @@ export class Director {
   }
 
   chapterAt(p: number): Chapter {
-    const order: Chapter[] = ['register', 'sponsors', 'about', 'timeline'];
+    const order = (Object.keys(this.chapterP) as Chapter[])
+      .filter((c) => c !== 'home')
+      .sort((a, b) => this.chapterP[b] - this.chapterP[a]);
     for (const c of order) if (p >= this.chapterP[c] - 0.012) return c;
     return 'home';
   }
@@ -239,6 +243,7 @@ export class Director {
     this.portrait = w / h < 0.95;
     this.r.resize(w, h, dpr);
     this.atmos.resize(w, h, Math.min(dpr, 1.5));
+    this.measureTrack(this.texts.aboutTrack, this.about, this.portrait ? h * 0.42 : h * 0.5);
     this.measureTrack(this.texts.logTrack, this.log, this.logFocus());
     this.measureTrack(this.texts.deckTrack, this.deck, this.deckFocus());
   }
@@ -388,6 +393,9 @@ export class Director {
     }
     css(T.introScrim, 'opacity', f3(1 - sstep(0.004, 0.06, dissolve)));
     css(T.hint, 'opacity', f3(1 - sstep(0.002, 0.016, p)));
+
+    // ---- about rises out of the dark water as the camera travels on
+    this.runTrack(T.aboutTrack, this.about, p, this.portrait ? H * 0.42 : H * 0.5, [H * 0.12, H * 1.02], false);
 
     // ---- the voyage log rises beside the bottle
     const [ha, hb, hc, hd] = K.log.header;

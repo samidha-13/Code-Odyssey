@@ -9,6 +9,7 @@ import { asset } from '../data/asset';
 import { HeroSection } from '../sections/HeroSection';
 import { IntroTitle } from '../sections/IntroTitle';
 import { VoyageLog } from '../sections/VoyageLog';
+import { AboutDeep } from '../sections/AboutDeep';
 
 type Props = { onUnsupported: () => void };
 
@@ -146,6 +147,7 @@ export function CinematicExperience({ onUnsupported }: Props) {
         Scroll to begin the voyage
         <i />
       </div>
+      <AboutDeep refFn={ref} />
       <VoyageLog refFn={ref} />
       <HeroSection refFn={ref} />
 

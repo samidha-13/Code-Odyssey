@@ -6,8 +6,8 @@ import { POWERED_BY } from '../data/sponsors';
 type Props = { refFn: (k: keyof TextRefs) => (node: HTMLElement | null) => void };
 
 /**
- * The ship's log: while the CSI ship sails, the hackathon's story rises
- * beside it — about, the facts, the articles, the allies and the invitation —
+ * The ship's log: while the CSI ship sails, the hackathon's facts rise beside
+ * it — the numbers, the articles, the allies, registration and the shortlist —
  * in the same rhythm as the voyage log beside the barrel.
  */
 export function HeroSection({ refFn }: Props) {
@@ -16,19 +16,6 @@ export function HeroSection({ refFn }: Props) {
     <>
       <div ref={refFn('deckScrim')} className="deck-scrim" style={{ opacity: 0 }} aria-hidden="true" />
       <ol ref={refFn('deckTrack')} className="deck-track" style={{ visibility: 'hidden' }} aria-label="About Code Odyssey 5.0">
-        <li data-item="" data-chapter="about" data-side="l" className="deck-item">
-          <p className="deck-eyebrow">About the voyage</p>
-          <h2 className="deck-title">
-            Welcome to Code Odyssey <em>{EVENT.edition}</em>
-          </h2>
-          <p className="deck-body">
-            Code Odyssey 5 (CO5) is organized by the {EVENT.organizer.name} student chapter of {EVENT.organizer.institute}.
-          </p>
-          <p className="deck-body deck-body--dim">
-            It is a {EVENT.format} taking place on {EVENT.dates.display}.
-          </p>
-        </li>
-
         <li data-item="" data-side="r" className="deck-item">
           <p className="deck-eyebrow">The voyage in numbers</p>
           <dl className="deck-facts">
@@ -89,12 +76,9 @@ export function HeroSection({ refFn }: Props) {
 
         <li data-item="" data-chapter="register" data-side="l" className="deck-item">
           <p className="deck-eyebrow">Join the crew</p>
-          <h2 className="deck-title">
-            Code Odyssey <em>{EVENT.edition}</em>
-          </h2>
-          <p className="deck-meta">
-            {EVENT.dates.display} · {EVENT.format}
-          </p>
+          <div className="deck-cta deck-cta--top">
+            <RegisterButton />
+          </div>
           <dl className="deck-reg">
             <div>
               <dt>Registration</dt>
@@ -105,15 +89,20 @@ export function HeroSection({ refFn }: Props) {
               <dd>{deadline}</dd>
             </div>
           </dl>
-          <div className="deck-cta">
-            <RegisterButton />
-          </div>
-          <p className="deck-follow">
-            Follow{' '}
+          <p className="deck-meta">
+            {EVENT.dates.display} · {EVENT.format}
+          </p>
+        </li>
+
+        <li data-item="" data-side="r" className="deck-item deck-item--shortlist">
+          <p className="deck-eyebrow">{EVENT.shortlist.title}</p>
+          <p className="deck-shortlist">{EVENT.shortlist.status}</p>
+          <p className="deck-body deck-body--dim">
+            Shortlisted teams will be announced on the official website and on Instagram{' '}
             <a href={EVENT.social.instagram.url} target="_blank" rel="noopener noreferrer">
               {EVENT.social.instagram.handle}
-            </a>{' '}
-            for announcements.
+            </a>
+            .
           </p>
         </li>
       </ol>
