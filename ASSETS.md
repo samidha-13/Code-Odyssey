@@ -76,3 +76,13 @@ No. It is about 240 px wide, while the helmet in the close-up plate is 562 px wi
 ## Not used in the current cut
 
 To keep a single, continuous ocean, the journey now breaks the surface directly into the ship's open sea. `ocean/ocean-surface.webp` and `ocean/ocean-surface-from-below.webp` are kept in the repository but no longer appear on the site.
+
+## Scroll films (supplied later)
+
+| File | Source | Processing | Role |
+|---|---|---|---|
+| `frames/hero/{d,m}/0001–0150.webp` | `design/source-assets/video/hero-sand-helmet-to-ocean.mp4` (1278×720, 30 fps, 10 s) | Every 2nd frame, WebP. `d/` is native size; `m/` is a centre 405×720 crop for phones. | **Home → deep:** scrubbed by scroll. Neighbouring frames are cross-faded so the motion stays smooth. |
+| `frames/bottle/{d,m}/0001–0150.webp` | `design/source-assets/video/bottle-message-to-surface.mp4` (same format) | Same | **Timeline:** the bottle rises from the deep beside the voyage log, breaks the surface, and the paper unrolls. The paper then crumbles away (shader dissolve) onto the ship's sea. |
+| `title/code-odyssey-title.webp` | `design/source-assets/code-odyssey-title.webp` | Black background keyed to alpha | The home title. It blows away as gold sand when scrolling starts, and its grains carry the art's real colours. |
+
+The frames are built by `scripts/extract_frames.sh` (requires ffmpeg). The earlier still sand/helmet plates, ocean plates and barrel are no longer used by the cinematic.

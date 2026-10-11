@@ -271,12 +271,31 @@ def barrel() -> None:
     print(f"  props/barrel.webp {b.size}")
 
 
+# ------------------------------------------------------------- title ----
+def title() -> None:
+    """The supplied CODE ODYSSEY 5.0 title art sits on pure black; key the
+    black out (soft luma key + un-premultiply) so it floats over the scene."""
+    print("title")
+    im = Image.open(SRC / "code-odyssey-title.webp").convert("RGB")
+    a = np.asarray(im).astype(float)
+    peak = a.max(axis=2)
+    alpha = smoothstep(4, 46, peak)
+    safe = np.maximum(alpha, 1e-3)[..., None]
+    rgb = np.clip(a / safe, 0, 255)  # black matte → un-premultiply
+    rgba = np.dstack([rgb.astype(np.uint8), (alpha * 255).astype(np.uint8)])
+    t = Image.fromarray(rgba, "RGBA")
+    t = t.crop(t.getbbox())
+    t.save(out("title/code-odyssey-title.webp"), "WEBP", quality=92, method=6)
+    print(f"  title/code-odyssey-title.webp {t.size}")
+
+
 if __name__ == "__main__":
     sand()
     portal()
     isolated_helmet()
     ocean()
     ship_new()
+    title()
     barrel()
     logos()
     textures()

@@ -1,28 +1,26 @@
 /**
  * One continuous scroll timeline (0 → 1 across the pinned scroll).
  *
- *   desert + title → push into the helmet → deep ocean → rise with the
- *   barrel and the voyage log → break the surface into the open sea →
- *   the CSI ship sails in; about, sponsors and registration ride with it
+ *   desert + title → (hero film) zoom into the helmet and down into the deep
+ *   → (bottle film) a message in a bottle rises beside the voyage log, breaks
+ *   the surface, the cork pops and the paper unrolls → the paper lifts away
+ *   onto the open sea → the CSI ship sails in with about, sponsors, register
  */
 export const CHOREO = {
   /** pinned scroll length in viewport heights */
-  lengthVh: { desktop: 19, mobile: 17 },
+  lengthVh: { desktop: 20, mobile: 18 },
 
-  title: [0.003, 0.055] as const, // title flies past the camera
-  zoomStart: 0.012,
-  zoomEnd: 0.16, // wide → approach → close-up
-  portalEnd: 0.235, // through the helmet
-  deepEnd: 0.29, // deep water, still moving forward
-  riseEnd: 0.585, // camera reaches the underside of the surface
-  breach: [0.585, 0.628] as const, // waterline sweeps across the lens
-  lift: [0.6, 0.66] as const, // camera lifts off the water, settling over the sea
-  shipIn: [0.64, 0.71] as const,
+  title: [0.006, 0.075] as const, // the title blows away as sand
+  hero: [0.0, 0.33] as const, // hero film frames 0 → last
+  dust: [0.16, 0.205] as const, // desert dust fades as the camera enters the helmet
+  join: [0.322, 0.345] as const, // hero film's deep water → bottle film's deep water
+  bottle: [0.33, 0.68] as const, // bottle film frames 0 → last
+  paperOff: [0.684, 0.75] as const, // the unrolled paper blows away as dust
+  lift: [0.69, 0.76] as const, // the open sea settles below the camera
+  shipIn: [0.725, 0.79] as const,
 
-  barrel: { enter: [0.29, 0.345] as const, exit: [0.5, 0.578] as const },
-  log: { header: [0.3, 0.325, 0.485, 0.515] as const, track: [0.31, 0.5] as const },
-  deck: { track: [0.69, 0.965] as const },
-  rays: [0.5, 0.545, 0.57, 0.6] as const,
+  log: { header: [0.342, 0.36, 0.452, 0.472] as const, track: [0.346, 0.468] as const },
+  deck: { track: [0.775, 0.97] as const },
 } as const;
 
 export type Chapter = 'home' | 'timeline' | 'about' | 'sponsors' | 'register';
@@ -35,7 +33,4 @@ export const easeOut3 = (t: number) => 1 - (1 - t) ** 3;
 export const easeIn2 = (t: number) => t * t;
 export const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 export const sstep = (a: number, b: number, x: number) => smooth(clamp01((x - a) / (b - a)));
-/** fade in over [a,b], out over [c,d] */
-export const win = (p: number, a: number, b: number, c: number, d: number) =>
-  (b <= a ? (p >= a ? 1 : 0) : seg(p, a, b)) * (1 - (d <= c ? (p >= d ? 1 : 0) : seg(p, c, d)));
 export const bell = (p: number, c: number, w: number) => Math.exp(-(((p - c) / w) ** 2));

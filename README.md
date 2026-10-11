@@ -3,10 +3,11 @@
 A cinematic, scroll-driven website for **Code Odyssey 5.0**, the 30-hour offline hackathon run by the Computer Society of India (CSI) Student Chapter at K. J. Somaiya Institute of Technology (KJSIT) on 17–18 October 2026, powered by TATA STRIVE.
 
 The whole site is one continuous, scroll-driven journey:
-1. **Home:** CODE ODYSSEY 5.0 hangs over the desert at sunset. When scrolling starts, its letters stream past the camera as it pushes into the buried helmet.
-2. **Into the deep:** the helmet's interior swallows the frame and opens into deep water, and the camera keeps moving forward.
-3. **Timeline:** the camera rises beside a floating barrel while the voyage log (the hackathon journey, 17–18 October 2026) moves up with it.
-4. **About → Sponsors → Register:** the camera breaks the surface into the open sea, and the CSI ship (CSI flag, TATA STRIVE sail) sails in on that same water. While it sails, the hackathon description, key facts, rules, sponsor and registration panels appear beside it.
+1. **Home:** the CODE ODYSSEY 5.0 title art sits over the desert film with drifting dust. As you scroll, the title blows away as gold sand, and the film zooms into the helmet and down into the deep ocean.
+2. **Timeline:** the bottle film takes over in the same dark water. A message in a bottle rises with the voyage log beside it, breaks the surface, the cork pops and the paper unrolls.
+3. **About → Sponsors → Register:** the paper crumbles away onto the open sea, and the CSI ship (CSI flag, TATA STRIVE sail) sails forward across it while the about, sponsor and registration panels appear.
+
+Both films are scroll-scrubbed image sequences (`public/assets/frames`, built with `scripts/extract_frames.sh`).
 
 The navbar chapters (Home, Timeline, About, Sponsors, Register) are points on that one timeline (`src/cinematic/chapters.ts`). With reduced motion or no WebGL, a static opening is followed by the regular About, Timeline, Sponsors and Register sections.
 

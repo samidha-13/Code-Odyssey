@@ -190,96 +190,33 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(64% 44% at 50% 36%, rgb(40 16 4 / 0.38), transparent 72%),
-    linear-gradient(180deg, rgb(10 6 10 / 0.3), transparent 28%);
+    radial-gradient(60% 40% at 50% 34%, rgb(30 12 2 / 0.32), transparent 72%),
+    linear-gradient(180deg, rgb(10 6 10 / 0.28), transparent 26%);
 }
-.intro {
+.intro-line {
   position: absolute;
   left: 50%;
-  top: 40%;
-  translate: -50% -50%;
-  width: min(96vw, 84rem);
+  top: 0;
+  width: max-content;
+  max-width: 92vw;
   text-align: center;
   pointer-events: none;
-}
-.intro .fly,
-.intro [data-fly] {
-  display: inline-block;
-  will-change: transform, opacity;
-  transform-origin: 50% 50%;
-}
-.intro-eyebrow,
-.intro-meta {
   font-size: clamp(0.62rem, 0.95vw, 0.8rem);
   font-weight: 700;
   letter-spacing: 0.42em;
   text-transform: uppercase;
   color: #fff1d8;
-  text-shadow: 0 1px 16px rgb(60 20 0 / 0.65);
+  text-shadow: 0 1px 16px rgb(60 20 0 / 0.75);
+  will-change: transform, opacity;
 }
 .intro-meta {
-  margin-top: clamp(1.4rem, 3.6vh, 2.6rem);
   letter-spacing: 0.3em;
 }
-.intro-mark {
-  margin-top: clamp(0.6rem, 2vh, 1.4rem);
-  filter: drop-shadow(0 8px 30px rgb(60 20 0 / 0.55));
-}
-.i-code,
-.i-odyssey {
-  display: block;
-  font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 0.92;
-  color: #fff3dc;
-}
-.i-code .fly,
-.i-odyssey .fly {
-  background: linear-gradient(178deg, #fffaf0 0%, #ffe6b8 48%, #e0a55c 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.i-code {
-  font-size: clamp(3rem, min(9.6vw, 17vh), 10.5rem);
-  letter-spacing: 0.28em;
-  margin-right: -0.28em; /* optically centre the tracked word */
-}
-.i-odyssey {
-  position: relative;
-  display: inline-block;
-  font-size: clamp(3.4rem, min(12.6vw, 22vh), 14rem);
-  letter-spacing: 0.03em;
-}
-.i-edition {
-  position: absolute;
-  right: -0.06em;
-  bottom: -0.5em;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 500;
-  font-size: 0.48em;
-  letter-spacing: 0;
-  color: #ffd99a;
-  text-shadow: 0 2px 18px rgb(60 20 0 / 0.6);
-}
 @media (max-width: 640px) {
-  .intro {
-    top: 37%;
-  }
-  .i-code {
-    font-size: 14vw;
-  }
-  .i-odyssey {
-    font-size: 15.5vw;
-  }
-  .intro-eyebrow,
-  .intro-meta {
-    letter-spacing: 0.24em;
+  .intro-line {
+    letter-spacing: 0.22em;
+    white-space: normal;
     line-height: 1.8;
-  }
-  .i-edition {
-    bottom: -0.62em;
   }
 }
 

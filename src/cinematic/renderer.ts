@@ -48,7 +48,19 @@ uniform vec4 u_colA;
 uniform vec4 u_colB;
 uniform vec4 u_rays;         // origin x, origin y (0..1 screen), intensity, spread
 uniform vec4 u_uvx;          // texture offset (xy) and scale (zw); masks still use the quad's own uv
+uniform vec4 u_dissolve;     // front (0..1.3), edge width, rim strength, grain frequency (0 = off)
 out vec4 o;
+
+float hash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+float vnoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash12(i), hash12(i + vec2(1, 0)), u.x), mix(hash12(i + vec2(0, 1)), hash12(i + vec2(1, 1)), u.x), u.y);
+}
 
 vec4 sampleTex(vec2 uv, float lod) {
   if (lod < 0.05) return texture(u_tex, uv);
@@ -137,6 +149,19 @@ void main() {
   }
   if (u_band.z > 0.0) mask *= smoothstep(u_band.x, u_band.y, v_uv.y);
 
+  if (u_dissolve.w > 0.0) {
+    // grains leave from left to right, with a ragged, glowing front
+    vec2 q = v_uv * u_dissolve.w;
+    float n = vnoise(q * vec2(46.0, 15.0)) * 0.5 + vnoise(q * vec2(140.0, 46.0)) * 0.3 + vnoise(q * vec2(420.0, 160.0)) * 0.2;
+    float thr = v_uv.x * 0.72 + n * 0.28;
+    float t = u_dissolve.x;
+    float keep = smoothstep(t, t + u_dissolve.y, thr);
+    float rim = (1.0 - smoothstep(t + u_dissolve.y, t + u_dissolve.y * 3.0, thr)) * keep;
+    c.rgb = mix(c.rgb, c.rgb * vec3(0.5, 0.32, 0.18), rim * (1.0 - min(u_dissolve.z, 1.0)) * 0.8);
+    c.rgb += vec3(1.0, 0.72, 0.32) * rim * u_dissolve.z * c.a;
+    mask *= keep;
+  }
+
   o = c * mask;
 }`;
 
@@ -158,13 +183,17 @@ export type DrawOpts = {
   rotation?: number; // radians about the rect centre
   /** texture offset/scale [ox, oy, sx, sy] — for repeating textures */
   uv?: [number, number, number, number];
+  /** sand dissolve: front position (0 = intact, ~1.32 = gone) */
+  dissolve?: number;
+  /** dissolve look: [edge width, rim glow, grain frequency] */
+  dissolveLook?: [number, number, number];
   /** fill only: darken the centre instead of the edges */
   invertVignette?: boolean;
 };
 
 const U = [
   'u_rect', 'u_res', 'u_tex', 'u_texSize', 'u_mode', 'u_opacity', 'u_grade', 'u_tint', 'u_vignette',
-  'u_band', 'u_focus', 'u_blur', 'u_ripple', 'u_water', 'u_time', 'u_colA', 'u_colB', 'u_rays', 'u_rot', 'u_uvx',
+  'u_band', 'u_focus', 'u_blur', 'u_ripple', 'u_water', 'u_time', 'u_colA', 'u_colB', 'u_rays', 'u_rot', 'u_uvx', 'u_dissolve',
 ] as const;
 type UName = (typeof U)[number];
 
@@ -240,6 +269,29 @@ export class Renderer {
     return { tex, w: img.naturalWidth, h: img.naturalHeight };
   }
 
+  /**
+   * (Re)fills a texture with a video frame. No mipmaps: frames change while
+   * scrolling, and they are always drawn at roughly screen size.
+   */
+  uploadFrame(img: HTMLImageElement, into: Tex | null): Tex {
+    const gl = this.gl;
+    let tex = into?.tex;
+    if (!tex) {
+      tex = gl.createTexture()!;
+      this.textures.push(tex);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    } else {
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+    }
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    return { tex, w: img.naturalWidth, h: img.naturalHeight };
+  }
+
   resize(cssW: number, cssH: number, dpr: number) {
     const c = this.gl.canvas as HTMLCanvasElement;
     const pw = Math.max(1, Math.round(cssW * dpr));
@@ -297,6 +349,8 @@ export class Renderer {
     gl.uniform4f(L.u_ripple, r?.[0] ?? 0, r?.[1] ?? 0, this.time, r?.[2] ?? -1);
     const u = o.uv;
     gl.uniform4f(L.u_uvx, u?.[0] ?? 0, u?.[1] ?? 0, u?.[2] ?? 1, u?.[3] ?? 1);
+    const dl = o.dissolveLook ?? [0.05, 0.9, 1];
+    gl.uniform4f(L.u_dissolve, o.dissolve ?? 0, dl[0], dl[1], o.dissolve !== undefined && o.dissolve > 0 ? dl[2] : 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
