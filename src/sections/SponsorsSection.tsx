@@ -54,13 +54,13 @@ export function SponsorsSection() {
 
   return (
     <section id="sponsors" ref={ref} className="relative overflow-hidden bg-[#070f1a]" aria-labelledby="sponsors-title">
-      {/* the allied fleet sails in the dark behind the banners */}
+      {/* the CSI ship under its TATA STRIVE sail, in the dark behind the banners */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <div
           data-reveal="parallax"
           data-speed="0.2"
           className="absolute inset-[-10%] bg-cover bg-[center_70%] opacity-[0.17] blur-[3px] saturate-[0.6]"
-          style={{ backgroundImage: `url(${asset('assets/ship/csi-fleet.webp')})` }}
+          style={{ backgroundImage: `url(${asset('assets/ship/csi-ship-scene.webp')})` }}
         />
         <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_45%,rgb(7_15_26/0.35),rgb(7_15_26/0.92)_75%)]" />
         <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[#070f1a] to-transparent" />

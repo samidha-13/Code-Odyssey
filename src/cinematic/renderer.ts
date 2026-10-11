@@ -12,10 +12,14 @@ const VERT = `#version 300 es
 in vec2 a_pos;
 uniform vec4 u_rect;      // x, y, w, h in CSS px (top-left origin)
 uniform vec2 u_res;       // viewport in CSS px
+uniform float u_rot;      // rotation about the rect centre (radians)
 out vec2 v_uv;
 out vec2 v_screen;
 void main() {
-  vec2 p = u_rect.xy + a_pos * u_rect.zw;
+  vec2 c = u_rect.xy + u_rect.zw * 0.5;
+  vec2 d = (a_pos - 0.5) * u_rect.zw;
+  float cs = cos(u_rot), sn = sin(u_rot);
+  vec2 p = c + vec2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
   v_uv = a_pos;
   v_screen = p;
   vec2 clip = (p / u_res) * 2.0 - 1.0;
@@ -89,9 +93,10 @@ void main() {
 
   if (u_mode == 2) {
     vec4 c = mix(u_colA, u_colB, smoothstep(0.0, 1.0, v_uv.y));
-    if (u_vignette.w > 0.0) {
+    if (u_vignette.w != 0.0) {
       float dv = length((v_uv - 0.5) / vec2(u_vignette.x, u_vignette.y));
-      c.a *= smoothstep(1.0 - u_vignette.z, 1.0, dv);
+      float e = smoothstep(1.0 - u_vignette.z, 1.0, dv);
+      c.a *= u_vignette.w > 0.0 ? e : 1.0 - e; // negative w: darken the centre instead
     }
     c.a *= mask;
     o = vec4(c.rgb * c.a, c.a);
@@ -149,11 +154,14 @@ export type DrawOpts = {
   blur?: number;
   ripple?: [number, number, number] | null; // amplitude, frequency, start uv.y
   water?: [number, number, number, number] | null; // lineY, amp, soft, side
+  rotation?: number; // radians about the rect centre
+  /** fill only: darken the centre instead of the edges */
+  invertVignette?: boolean;
 };
 
 const U = [
   'u_rect', 'u_res', 'u_tex', 'u_texSize', 'u_mode', 'u_opacity', 'u_grade', 'u_tint', 'u_vignette',
-  'u_band', 'u_focus', 'u_blur', 'u_ripple', 'u_water', 'u_time', 'u_colA', 'u_colB', 'u_rays',
+  'u_band', 'u_focus', 'u_blur', 'u_ripple', 'u_water', 'u_time', 'u_colA', 'u_colB', 'u_rays', 'u_rot',
 ] as const;
 type UName = (typeof U)[number];
 
@@ -255,6 +263,7 @@ export class Renderer {
     gl.uniform1i(L.u_mode, mode);
     gl.uniform4f(L.u_rect, o.rect[0], o.rect[1], o.rect[2], o.rect[3]);
     gl.uniform1f(L.u_opacity, o.opacity ?? 1);
+    gl.uniform1f(L.u_rot, o.rotation ?? 0);
     const w = o.water;
     gl.uniform4f(L.u_water, w?.[0] ?? 0, w?.[1] ?? 0, w?.[2] ?? 1, w?.[3] ?? 0);
   }
@@ -297,7 +306,7 @@ export class Renderer {
     gl.uniform4f(L.u_colA, ...top);
     gl.uniform4f(L.u_colB, ...bottom);
     const v = o.vignette;
-    gl.uniform4f(L.u_vignette, v?.[0] ?? 1, v?.[1] ?? 1, v?.[2] ?? 0, v ? 1 : 0);
+    gl.uniform4f(L.u_vignette, v?.[0] ?? 1, v?.[1] ?? 1, v?.[2] ?? 0, v ? (o.invertVignette ? -1 : 1) : 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 

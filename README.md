@@ -2,7 +2,14 @@
 
 A cinematic, scroll-driven website for **Code Odyssey 5.0**, the 30-hour offline hackathon run by the Computer Society of India (CSI) Student Chapter at K. J. Somaiya Institute of Technology (KJSIT) on 17–18 October 2026, powered by TATA STRIVE.
 
-Scrolling carries the visitor through one continuous world. The story starts at a helmet in the desert sand, passes through the helmet into the dark ocean, rises towards sunlight and breaks the surface. It ends at the CSI ship, where the event identity is revealed piece by piece. The About, Timeline, Sponsors and Register chapters continue the same voyage.
+Scrolling carries the visitor through one continuous world:
+1. The CODE ODYSSEY 5.0 title is set over the desert at sunset, and dissolves as scrolling begins.
+2. The camera pushes into the buried helmet, and its interior swallows the frame.
+3. The camera passes into the deep ocean.
+4. A barrel rises towards the light, with the voyage log (the hackathon journey and 17–18 October 2026) drifting up beside it.
+5. The camera breaks the surface, tilts down, and the CSI ship sails in under its TATA STRIVE sail while the sponsor details and the invitation appear.
+
+The About, Timeline, Sponsors and Register chapters follow in the same world.
 
 ```bash
 npm install
@@ -49,11 +56,10 @@ design/source-assets/   untouched originals extracted from the PDF
 
 - **Scroll → progress → frame.** ScrollTrigger pins the hero for 13 viewport heights (11 on phones) and reports progress. A damped follower adds slight camera inertia. The director renders each frame as a pure function of that progress, so scrolling up reverses the whole journey exactly. Nothing goes through React state during scroll.
 - **Why WebGL, and why not Three.js.** All the scenery is 2D renders, so there's no 3D scene to build. WebGL is used for the effects DOM layers can't do cheaply: mip-level depth of field, refraction ripples, the animated waterline, and procedural light shafts. If WebGL2 is unavailable, or the visitor prefers reduced motion, `StaticVoyage` tells the same story with static plates.
-- **Text belongs to the scenes.** Each line has its own interval and its own motion:
-  - "Every great journey…" condenses letter by letter out of the dark.
-  - "Rise above…" climbs out of a mask and cools in colour as the light grows.
-  - CODE converges from the haze, then ODYSSEY is swept in by a bronze sheen and 5.0 rises.
-  - The dates, format, TATA STRIVE and the call to action follow in sequence.
+- **Text belongs to the scenes.**
+  - The title dissolves upward with a slight blur as the push-in starts.
+  - Voyage-log entries move in lockstep with the barrel, and each comes into focus as it reaches the barrel's depth.
+  - The ship's sponsor details surface one by one as it sails in.
 - **Navigation.** Navbar links scroll smoothly. Long jumps, such as going back to Home, dip to dark instead of scrubbing through the whole voyage. Deep links like `/#timeline` work.
 
 See **[ASSETS.md](ASSETS.md)** for the asset manifest, alignment measurements, and the gaps in the supplied material.

@@ -1,35 +1,40 @@
 /**
  * Scroll choreography for the pinned cinematic, expressed as progress
  * intervals (0 → 1 across the whole pinned scroll). Tune timing here.
+ *
+ *   title on the sand → push into the helmet → swallowed by its interior →
+ *   deep ocean → barrel + voyage log rise towards the light → surface →
+ *   the CSI ship sails in with its allies
  */
 export const CHOREO = {
   /** pinned scroll length in viewport heights */
-  lengthVh: { desktop: 13, mobile: 11 },
+  lengthVh: { desktop: 14, mobile: 12 },
 
-  hold: 0.035, // opening frame breathing room
-  zoomEnd: 0.3, // wide → approach → close-up complete
-  portalEnd: 0.395, // camera has passed through the helmet
-  darkEnd: 0.52, // dark-ocean breathing room
+  zoomStart: 0.018,
+  zoomEnd: 0.2, // wide → approach → close-up complete
+  portalEnd: 0.29, // camera has passed through the helmet
+  deepEnd: 0.37, // breathing room in the dark
   riseEnd: 0.735, // camera reaches the underside of the surface
   breachStart: 0.735,
-  breachEnd: 0.795, // waterline has swept past the lens
-  tiltStart: 0.83,
-  tiltEnd: 0.875,
-  shipIn: [0.845, 0.9] as const,
+  breachEnd: 0.79, // waterline has swept past the lens
+  tiltStart: 0.812,
+  tiltEnd: 0.858,
+  shipIn: [0.83, 0.905] as const,
+
+  barrel: { enter: [0.372, 0.445] as const, exit: [0.672, 0.73] as const },
+  log: { header: [0.39, 0.42, 0.66, 0.69] as const, track: [0.4, 0.69] as const },
 
   text: {
-    presents: [0.0, 0.0, 0.022, 0.04] as const,
-    hint: [0.0, 0.0, 0.012, 0.03] as const,
-    line1: [0.402, 0.445, 0.492, 0.515] as const,
-    line2: [0.572, 0.612, 0.655, 0.69] as const,
-    code: [0.865, 0.888] as const,
-    odyssey: [0.886, 0.912] as const,
-    edition: [0.908, 0.928] as const,
-    dates: [0.926, 0.942] as const,
-    duration: [0.938, 0.954] as const,
-    powered: [0.952, 0.968] as const,
-    cta: [0.966, 0.982] as const,
-    cue: [0.984, 0.996] as const,
+    intro: [0.004, 0.045] as const, // big title fades as scrolling begins
+    hint: [0.0, 0.0, 0.006, 0.02] as const,
+    finale: {
+      eyebrow: [0.872, 0.892] as const,
+      logo: [0.886, 0.91] as const,
+      copy: [0.904, 0.926] as const,
+      identity: [0.918, 0.94] as const,
+      cta: [0.936, 0.958] as const,
+      cue: [0.975, 0.995] as const,
+    },
   },
 } as const;
 

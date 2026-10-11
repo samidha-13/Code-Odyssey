@@ -127,67 +127,6 @@ def ocean() -> None:
     webp(Image.open(SRC / "p7-01-ocean-surface.png").convert("RGB"), "ocean/ocean-surface.webp")
 
 
-# ---------------------------------------------------------------- ship ----
-def ship() -> None:
-    """The PDF only contains the multi-ship CSI fleet render. Until the
-    single-ship image is supplied, the lead (flag) ship is cropped out of it
-    and used as a stand-in. Replace ship/csi-ship.webp to swap it."""
-    print("ship")
-    fleet = Image.open(SRC / "p8-01-csi-fleet.jpg").convert("RGB")
-    webp(fleet, "ship/csi-fleet.webp", 86)
-
-    x0, x1 = 597, 1013
-    crop = fleet.crop((x0, 0, x1, fleet.size[1]))
-    w, h = crop.size
-    # feathered side edges so the crop melts into the sea plate
-    xs = np.arange(w)
-    edge = np.minimum(xs, w - 1 - xs).astype(float)
-    a = smoothstep(0, 78, edge)[None, :].repeat(h, 0)
-    rgba = np.dstack([np.asarray(crop), (a * 255).astype(np.uint8)])
-    Image.fromarray(rgba, "RGBA").save(out("ship/csi-ship.webp"), "WEBP", quality=90, method=6)
-    print(f"  ship/csi-ship.webp {w}x{h}")
-
-    # Sea plate: widen the crop's own water by stretching its outer columns,
-    # then blur heavily -> a colour-matched aerial sea field for the
-    # remainder of a landscape viewport (no other ships visible).
-    arr = np.asarray(crop).astype(float)
-    left = arr[:, :34].mean(1, keepdims=True)
-    right = arr[:, -34:].mean(1, keepdims=True)
-    edge_col = (left + right) / 2  # (h, 1, 3) average sea colour per row
-    # square plate, drawn at the ship's own scale so wave sizes match
-    W = h = 1800
-    col = np.asarray(Image.fromarray(np.clip(edge_col, 0, 255).astype(np.uint8)).resize((1, h), Image.BILINEAR)).astype(float)
-    plate = Image.fromarray(np.clip(np.repeat(col, W, axis=1), 0, 255).astype(np.uint8))
-    plate = plate.filter(ImageFilter.GaussianBlur(40))
-    # Re-texture with real water: random feathered patches sampled only from
-    # ship-free open water in the fleet render (a light texture "quilt").
-    rng = np.random.default_rng(11)
-    farr = np.asarray(fleet).astype(float)
-    clean = [(0, 0, 245, 320), (1150, 0, 1420, 165)]
-    acc = np.zeros((h, W)), np.zeros((h, W))
-    P = 96
-    yy, xx = np.mgrid[0:P, 0:P]
-    win = (np.sin(np.pi * (xx + 0.5) / P) * np.sin(np.pi * (yy + 0.5) / P)) ** 2
-    for _ in range(int(W * h / (P * P) * 9)):
-        cx0, cy0, cx1, cy1 = clean[rng.integers(len(clean))]
-        sx = rng.integers(cx0, cx1 - P)
-        sy = rng.integers(cy0, cy1 - P)
-        patch = luminance(farr[sy:sy + P, sx:sx + P])
-        if rng.random() < 0.5:
-            patch = patch[:, ::-1]
-        patch = patch - patch.mean()
-        dx = rng.integers(-P // 2, W - P // 2)
-        dy = rng.integers(-P // 2, h - P // 2)
-        x0, y0 = max(dx, 0), max(dy, 0)
-        x1, y1 = min(dx + P, W), min(dy + P, h)
-        acc[0][y0:y1, x0:x1] += (patch * win)[y0 - dy:y1 - dy, x0 - dx:x1 - dx]
-        acc[1][y0:y1, x0:x1] += win[y0 - dy:y1 - dy, x0 - dx:x1 - dx]
-    detail = (acc[0] / np.maximum(acc[1], 1e-3))[..., None] * 1.05
-    pa = np.asarray(plate).astype(float)
-    res = np.clip(pa + detail, 0, 255).astype(np.uint8)
-    webp(Image.fromarray(res), "ship/csi-sea-plate.webp", 82)
-
-
 # --------------------------------------------------------------- logos ----
 def logos() -> None:
     print("logos")
@@ -217,12 +156,108 @@ def social() -> None:
     print("  og-image.jpg 1200x630")
 
 
+# ------------------------------------------------- new ship (TATA sail) ----
+SHIP_POLY = [  # hull + sail + yard + mast + flag, in source px (1581x995)
+    (800, 2), (918, 2), (918, 96), (828, 96), (826, 190), (1062, 192), (1062, 214), (1050, 216),
+    (1046, 440), (1030, 515), (962, 522), (958, 640), (948, 760), (900, 850), (840, 925), (818, 948),
+    (796, 925), (742, 850), (700, 760), (682, 640), (678, 522), (620, 515), (600, 440), (596, 216),
+    (584, 214), (584, 192), (802, 190), (798, 96),
+]
+RIGGING = [(812, 80), (1000, 196), (640, 196)]
+WAKE_POLY = [
+    (580, 360), (1070, 360), (1108, 560), (1092, 700), (1030, 800), (960, 900), (905, 995),
+    (730, 995), (660, 860), (590, 720), (535, 600), (548, 450),
+]
+
+
+def ship_new() -> None:
+    """Splits the supplied aerial ship scene into (a) a clean, ship-free ocean
+    whose waves can move, and (b) the ship + its wake as an alpha cut-out."""
+    print("ship (TATA STRIVE sail)")
+    im = Image.open(SRC / "n1-csi-ship-tata-strive-sail.jpg").convert("RGB")
+    W, H = im.size
+    arr = np.asarray(im).astype(float)
+
+    def poly_mask(poly, blur):
+        m = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(m).polygon(poly, fill=255)
+        return m.filter(ImageFilter.GaussianBlur(blur)) if blur else m
+
+    ship = np.asarray(poly_mask(SHIP_POLY, 1.2)).astype(float) / 255
+    rig = np.asarray(poly_mask(RIGGING, 2)).astype(float) / 255 * 0.9
+    wake = np.asarray(poly_mask(WAKE_POLY, 26)).astype(float) / 255
+    cut_a = np.clip(np.maximum.reduce([ship, rig, wake]), 0, 1)
+    rgba = np.dstack([arr.astype(np.uint8), (cut_a * 255).astype(np.uint8)])
+    cut = Image.fromarray(rgba, "RGBA")
+    box = cut.getbbox()
+    cut.crop(box).save(out("ship/csi-ship.webp"), "WEBP", quality=90, method=6)
+    print(f"  ship/csi-ship.webp crop box {box}")
+
+    # inpaint the ship + wake out of the ocean with patches of real water
+    # sampled from the same rows (keeps the lighting gradient)
+    hole = np.asarray(
+        Image.fromarray((np.maximum(np.maximum(ship, rig), wake > 0.02) * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(31))
+    ).astype(float) / 255
+    rng = np.random.default_rng(5)
+    P = 72
+    yy, xx = np.mgrid[0:P, 0:P]
+    winw = (np.sin(np.pi * (xx + 0.5) / P) * np.sin(np.pi * (yy + 0.5) / P)) ** 2
+    acc = np.zeros((H, W, 3))
+    wsum = np.zeros((H, W))
+    ys, xs = np.where(hole > 0.01)
+    y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
+    clean_x = [(20, x0 - P - 20), (x1 + 20, W - P - 20)]
+    n = int((y1 - y0 + P) * (x1 - x0 + P) / (P * P) * 10)
+    for _ in range(n):
+        dx = rng.integers(x0 - P // 2, x1 - P // 2)
+        dy = rng.integers(y0 - P // 2, y1 - P // 2 + 1)
+        lo, hi = clean_x[rng.integers(2)]
+        sx = rng.integers(lo, hi)
+        sy = int(np.clip(dy + rng.integers(-40, 40), 0, H - P))
+        patch = arr[sy:sy + P, sx:sx + P]
+        if rng.random() < 0.5:
+            patch = patch[:, ::-1]
+        ya, yb = max(dy, 0), min(dy + P, H)
+        xa, xb = max(dx, 0), min(dx + P, W)
+        wv = winw[ya - dy:yb - dy, xa - dx:xb - dx]
+        acc[ya:yb, xa:xb] += patch[ya - dy:yb - dy, xa - dx:xb - dx] * wv[..., None]
+        wsum[ya:yb, xa:xb] += wv
+    fill = acc / np.maximum(wsum, 1e-3)[..., None]
+    soft = np.asarray(Image.fromarray((hole * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(14))).astype(float) / 255
+    soft = np.maximum(soft, hole)
+    soft = np.where(wsum > 0.05, soft, 0)[..., None]
+    ocean = arr * (1 - soft) + fill * soft
+    webp(Image.fromarray(np.clip(ocean, 0, 255).astype(np.uint8)), "ocean/ocean-open-sea.webp", 86)
+    webp(im, "ship/csi-ship-scene.webp", 86)
+
+
+def barrel() -> None:
+    print("barrel")
+    im = Image.open(SRC / "n2-barrel-white-bg.png").convert("RGB")
+    a = np.asarray(im).astype(float)
+    bg = ((a.min(2) > 226) & ((a.max(2) - a.min(2)) < 22)).astype(np.uint8) * 255
+    m = Image.fromarray(bg).copy()
+    w, h = m.size
+    for seed in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1), (w // 2, 0), (w // 2, h - 1), (0, h // 2), (w - 1, h // 2)]:
+        if m.getpixel(seed) == 255:
+            ImageDraw.floodfill(m, seed, 128)
+    outside = (np.asarray(m) == 128).astype(np.uint8) * 255
+    outside = Image.fromarray(outside).filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.GaussianBlur(1.4))
+    alpha = 255 - np.asarray(outside).astype(float)
+    rgba = np.dstack([a.astype(np.uint8), alpha.astype(np.uint8)])
+    b = Image.fromarray(rgba, "RGBA")
+    b = b.crop(b.getbbox())
+    b.save(out("props/barrel.webp"), "WEBP", quality=90, method=6)
+    print(f"  props/barrel.webp {b.size}")
+
+
 if __name__ == "__main__":
     sand()
     portal()
     isolated_helmet()
     ocean()
-    ship()
+    ship_new()
+    barrel()
     logos()
     textures()
     social()

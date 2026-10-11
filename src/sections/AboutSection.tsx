@@ -27,7 +27,7 @@ export function AboutSection() {
           data-speed="0.25"
           className="absolute inset-0 bg-cover bg-top"
           style={{
-            backgroundImage: `url(${asset('assets/ship/csi-sea-plate.webp')})`,
+            backgroundImage: `url(${asset('assets/ocean/ocean-open-sea.webp')})`,
             maskImage: 'linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.55) 35%, transparent 85%)',
             WebkitMaskImage: 'linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.55) 35%, transparent 85%)',
           }}

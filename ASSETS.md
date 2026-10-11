@@ -19,11 +19,13 @@ Nothing is invented. Every output is a copy, crop, mask, resize or re-encode of 
 | 7 | `p7-01-ocean-surface.png` | 1600×900 | Open sea at the horizon |
 | 8 | `p8-01-csi-fleet.jpg` | 1600×901 | Aerial fleet of galleys with CSI-KJSIT sails |
 | 8 | `p8-02-tata-strive-logo.png` | 225×225 | TATA STRIVE logo tile (with its own gradient) |
+| — | `n1-csi-ship-tata-strive-sail.jpg` | 1581×995 | Supplied later: aerial CSI ship with the CSI flag and a TATA STRIVE sail |
+| — | `n2-barrel-white-bg.png` | 483×623 | Supplied later: wooden barrel on white. It may carry a faint stock-photo watermark in the white area; removing the background strips most of it, but check the image's licence. |
 
 ### Gaps in what was supplied
 
 - **The helmet sequence has three distinct shots, not four.** The brief describes four progressive sand-and-helmet images, but page 1's two images are identical. The fourth stage (extreme close-up / portal) is built from the close-up plate (see `helmet-portal`).
-- **No standalone single-ship image.** The only ship render is the multi-ship fleet (page 8). Until the single CSI ship image is supplied, `ship/csi-ship.webp` is a **temporary stand-in**: a tight crop of the lead ship only, with feathered edges. The crop doesn't distort the ship, flag or sail. To swap in the real asset, replace `public/assets/ship/csi-ship.webp` and its sea plate (or update `SCENE_ASSETS.ship` in `src/cinematic/director.ts`).
+- **Ship.** The single CSI ship image (TATA STRIVE sail) has now been supplied and replaces the earlier stand-in, which was cropped from the fleet image. The fleet image is no longer used on the site.
 - **No CSI KJSIT logo file.** The navbar uses a typographic "CSI · KJSIT" mark. Set `EVENT.organizer.logo` in `src/data/event.ts` to a file in `public/` and the navbar will use it. The sail emblem was not cropped out of the render to stand in as the official logo.
 
 ## Web assets (public/assets)
@@ -40,9 +42,10 @@ Nothing is invented. Every output is a copy, crop, mask, resize or re-encode of 
 | `ocean/ocean-light-rays.webp` | p5 | WebP q88 | **Scene 04** ascent. The camera pans from the black bottom of this tall plate up to its sunlit top. |
 | `ocean/ocean-surface-from-below.webp` | p6 | WebP q92 | **Scene 05** just under the surface. Used briefly behind ripple and blur because of its low resolution. |
 | `ocean/ocean-surface.webp` | p7 | WebP q88 | **Scene 05–06** above water, revealed by the moving waterline |
-| `ship/csi-ship.webp` | p8 #1 (lead ship crop x 597–1013) | Crop with 78 px feathered sides (alpha) | **Scene 06** the CSI ship. Temporary stand-in, see above. |
-| `ship/csi-sea-plate.webp` | p8 #1 | 1800² plate: the crop's own sea colour, re-textured with feathered patches sampled only from ship-free open water | Sea around the ship. Drawn at the ship's scale so the waves match; also the About backdrop. |
-| `ship/csi-fleet.webp` | p8 #1 | WebP q86 | Dimmed backdrop of **Sponsors** ("allies of the voyage"). It never stands in for the hero ship. |
+| `ocean/ocean-open-sea.webp` | n1 | The ship and its wake are removed and the area re-filled with real wave texture from the same rows of the same image | **Scene 06** the open sea the ship sails across, drawn as two drifting, rippling layers. Also the About backdrop. |
+| `ship/csi-ship.webp` | n1 (crop x 471–1173) | Hand-traced hull, sail, yard, mast and flag mask, plus a feathered wake mask (alpha) | **Scene 06** the ship cut-out that sails into frame over the moving sea. The CSI flag and TATA STRIVE sail are untouched. |
+| `ship/csi-ship-scene.webp` | n1 | WebP q86 (full scene) | Dimmed backdrop of **Sponsors**; static fallback |
+| `props/barrel.webp` | n2 | White background keyed out by flood fill from the border, edges eroded | **Scene 04** the barrel that rises beside the voyage log. It is tinted by depth in the shader. |
 | `logos/tata-strive-logo.png` | p8 #2 | Lossless; never cropped or recoloured | Hero "Powered by", Sponsors banner |
 | `textures/grain.png` | generated | 160² noise | Film grain overlay |
 | `../favicon-32.png`, `../apple-touch-icon.png`, `../icon-512.png` | isolated helmet | Resized | Favicons |

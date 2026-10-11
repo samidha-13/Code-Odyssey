@@ -2,6 +2,7 @@ import { RegisterButton } from './RegisterButton';
 import { asset } from '../data/asset';
 import { EVENT } from '../data/event';
 import { POWERED_BY } from '../data/sponsors';
+import { TIMELINE } from '../data/timeline';
 
 /**
  * Motion-free telling of the same story, used when the visitor prefers
@@ -14,64 +15,92 @@ export function StaticVoyage() {
         {EVENT.name} — {EVENT.format}, {EVENT.dates.display}. Powered by TATA STRIVE.
       </h1>
 
-      <figure className="relative h-[100svh] min-h-[32rem] overflow-hidden">
+      <figure className="relative h-[100svh] min-h-[34rem] overflow-hidden">
         <img
           src={asset('assets/sand/sand-helmet-01-wide.webp')}
           alt="An ancient Greek helmet half-buried in desert sand at sunset, a citadel and the Trojan horse beyond."
           className="absolute inset-0 h-full w-full object-cover object-[48%_60%]"
           fetchPriority="high"
         />
-        <figcaption className="absolute inset-x-0 bottom-[14vh] text-center font-serif text-lg italic text-ivory/90">
-          The Computer Society of India · KJSIT Student Chapter
-          <span className="mt-1 block not-italic font-sans text-[0.62rem] font-semibold uppercase tracking-[0.5em] text-bronze-light">
-            presents
-          </span>
-        </figcaption>
+        <div className="intro-scrim" aria-hidden="true" />
+        <div className="intro" aria-hidden="true">
+          <p className="intro-eyebrow">
+            <span>Computer Society of India</span>
+            <i />
+            <span>KJSIT presents</span>
+          </p>
+          <div className="intro-mark">
+            <span className="i-code">CODE</span>
+            <span className="i-odyssey">
+              ODYSSEY<span className="i-edition">{EVENT.edition}</span>
+            </span>
+          </div>
+          <p className="intro-meta">
+            <span>{EVENT.dates.display}</span>
+            <i />
+            <span>{EVENT.format}</span>
+          </p>
+        </div>
       </figure>
 
-      <figure className="relative grid h-[80svh] min-h-[28rem] place-items-center overflow-hidden bg-abyss">
-        <img src={asset('assets/ocean/ocean-depths.webp')} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-        <p className="story-line line1 !static !translate-none px-6">Every great journey begins in the unknown.</p>
-      </figure>
-
-      <figure className="relative grid h-[90svh] min-h-[28rem] place-items-center overflow-hidden">
-        <img src={asset('assets/ocean/ocean-light-rays.webp')} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-top" />
-        <p className="story-line line2 !static !translate-none px-6">Rise above the unknown.</p>
-      </figure>
+      <div className="relative overflow-hidden bg-abyss">
+        <img src={asset('assets/ocean/ocean-light-rays.webp')} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-bottom opacity-80" />
+        <div className="relative mx-auto grid max-w-5xl gap-12 px-6 py-28 md:grid-cols-[1fr_14rem]">
+          <div>
+            <p className="log-eyebrow">The Voyage Log</p>
+            <p className="log-date !text-left">{EVENT.dates.display}</p>
+            <ol className="mt-12 space-y-12">
+              {TIMELINE.map((m, i) => (
+                <li key={m.id} className="log-item !m-0 !w-auto !text-left" style={{ ['--focus' as string]: 1 }}>
+                  <span className="log-num">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="log-when">{m.when}</span>
+                  <h3 className="log-title">{m.title}</h3>
+                  <p className="log-detail">{m.detail}</p>
+                  <span className="log-tags !justify-start">
+                    {m.confirmed && <span className="log-tag log-tag--on">Confirmed date</span>}
+                    {m.note && <span className="log-tag">{m.note}</span>}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <img src={asset('assets/props/barrel.webp')} alt="" loading="lazy" className="hidden w-56 self-center opacity-80 md:block" />
+        </div>
+      </div>
 
       <div className="relative min-h-[100svh] overflow-hidden">
-        <img src={asset('assets/ship/csi-sea-plate.webp')} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
         <img
-          src={asset('assets/ship/csi-ship.webp')}
-          alt="An ancient ship under sail carrying the Computer Society of India CSI-KJSIT emblem."
+          src={asset('assets/ship/csi-ship-scene.webp')}
+          alt="The CSI ship under a TATA STRIVE sail, flying the CSI-KJSIT flag on the open sea."
           loading="lazy"
-          className="absolute bottom-0 right-1/2 h-[70%] w-auto translate-x-1/2 md:right-[22%] md:top-[4%] md:h-[96%] md:translate-x-1/2"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="hero-scrim" aria-hidden="true" />
-        <div className="relative z-10 px-5 pb-[45vh] pt-28 md:max-w-[52vw] md:px-[6vw] md:pb-24 md:pt-[22vh]">
-          <span className="t-code">CODE</span>
-          <span className="t-odyssey" style={{ ['--sheen' as string]: 1 }}>
-            ODYSSEY
-          </span>
-          <span className="t-edition">
-            <span>{EVENT.edition}</span>
-          </span>
-          <p className="t-meta t-dates" style={{ ['--rule' as string]: 1 }}>
-            <span className="rule" />
-            {EVENT.dates.display}
-          </p>
-          <p className="t-meta t-duration">{EVENT.format}</p>
-          {POWERED_BY && (
-            <div className="mt-8 flex items-center gap-4">
-              <img src={POWERED_BY.logo} width={POWERED_BY.width} height={POWERED_BY.height} alt={POWERED_BY.name} className="h-16 w-auto rounded-[3px] ring-1 ring-ivory/25" />
-              <span className="flex flex-col gap-1">
-                <span className="text-[0.62rem] font-semibold uppercase tracking-[0.42em] text-bronze-light">Powered by</span>
-                <span className="font-display tracking-[0.16em]">{POWERED_BY.name}</span>
+        <div className="finale-scrim" aria-hidden="true" />
+        <div className="finale !relative min-h-[100svh]">
+          <div className="finale-col finale-col--left">
+            <p className="finale-eyebrow">Allies of the Voyage</p>
+            {POWERED_BY && (
+              <div className="finale-sponsor">
+                <img src={POWERED_BY.logo} width={POWERED_BY.width} height={POWERED_BY.height} alt={POWERED_BY.name} />
+                <span>
+                  <small>{POWERED_BY.tier}</small>
+                  <strong>{POWERED_BY.name}</strong>
+                </span>
+              </div>
+            )}
+            <p className="finale-copy">{EVENT.winnerOpportunity}</p>
+          </div>
+          <div className="finale-col finale-col--right">
+            <div className="finale-identity">
+              <span className="fi-name">
+                Code Odyssey <em>{EVENT.edition}</em>
               </span>
+              <span className="fi-meta">{EVENT.dates.display}</span>
+              <span className="fi-meta fi-meta--dim">{EVENT.format}</span>
             </div>
-          )}
-          <div className="mt-9">
-            <RegisterButton />
+            <div className="finale-cta">
+              <RegisterButton />
+            </div>
           </div>
         </div>
       </div>

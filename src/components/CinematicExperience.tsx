@@ -6,7 +6,8 @@ import { Director, type TextRefs } from '../cinematic/director';
 import { Renderer } from '../cinematic/renderer';
 import { asset } from '../data/asset';
 import { HeroSection } from '../sections/HeroSection';
-import { ScrollText } from './ScrollText';
+import { IntroTitle } from '../sections/IntroTitle';
+import { VoyageLog } from '../sections/VoyageLog';
 
 type Props = { onUnsupported: () => void };
 
@@ -33,6 +34,7 @@ export function CinematicExperience({ onUnsupported }: Props) {
     const mobile = window.matchMedia('(max-width: 767px)').matches;
     const director = new Director(renderer, fxCanvas.current!, texts.current, mobile);
 
+    let alive = true;
     let target = 0;
     let current = 0;
     let st: ScrollTrigger | null = null;
@@ -86,6 +88,7 @@ export function CinematicExperience({ onUnsupported }: Props) {
 
     const ro = new ResizeObserver(size);
     ro.observe(el);
+    document.fonts?.ready.then(() => alive && size());
 
     const canvas = glCanvas.current!;
     const onLost = (e: Event) => {
@@ -94,7 +97,6 @@ export function CinematicExperience({ onUnsupported }: Props) {
     };
     canvas.addEventListener('webglcontextlost', onLost);
 
-    let alive = true;
     director.load(
       () => alive && setReady(true),
       (f) => alive && setProgress(f),
@@ -127,28 +129,12 @@ export function CinematicExperience({ onUnsupported }: Props) {
       <canvas ref={fxCanvas} className="pointer-events-none absolute inset-0 block h-full w-full" aria-hidden="true" />
       <div className="hero-grain" aria-hidden="true" />
 
-      <p
-        ref={ref('presents')}
-        className="pointer-events-none absolute inset-x-0 bottom-[max(7.5rem,17vh)] text-center font-serif text-[0.95rem] italic tracking-[0.08em] text-ivory/85 sm:text-lg"
-      >
-        The Computer Society of India · KJSIT Student Chapter
-        <span className="mt-1 block not-italic font-sans text-[0.62rem] font-semibold tracking-[0.5em] text-bronze-light uppercase">
-          presents
-        </span>
-      </p>
+      <IntroTitle refFn={ref} />
       <div ref={ref('hint')} className="scroll-hint" aria-hidden="true">
         Scroll to begin the voyage
         <i />
       </div>
-
-      <ScrollText
-        refFn={ref('line1')}
-        className="story-line line1"
-        variant="letters"
-        lines={['Every great journey', 'begins in the unknown.']}
-      />
-      <ScrollText refFn={ref('line2')} className="story-line line2" variant="words" lines={['Rise above', 'the unknown.']} />
-
+      <VoyageLog refFn={ref} />
       <HeroSection refFn={ref} />
 
       <div className="loader" data-done={ready} aria-hidden={ready}>

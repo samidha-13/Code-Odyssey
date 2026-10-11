@@ -1,5 +1,4 @@
 import type { TextRefs } from '../cinematic/director';
-import { Letters } from '../components/Letters';
 import { RegisterButton } from '../components/RegisterButton';
 import { EVENT } from '../data/event';
 import { POWERED_BY } from '../data/sponsors';
@@ -7,62 +6,45 @@ import { POWERED_BY } from '../data/sponsors';
 type Props = { refFn: (k: keyof TextRefs) => (node: HTMLElement | null) => void };
 
 /**
- * The event identity revealed over the CSI ship. Every element is registered
- * with the director, which gives each its own scroll interval:
- * CODE → ODYSSEY → 5.0 → dates → format → TATA STRIVE → call to action.
+ * The last scene of the voyage: the CSI ship under its TATA STRIVE sail.
+ * Sponsor details and the invitation surface one by one as the ship sails in.
  */
 export function HeroSection({ refFn }: Props) {
   return (
     <>
-      <div ref={refFn('scrim')} className="hero-scrim" style={{ opacity: 0 }} aria-hidden="true" />
+      <div ref={refFn('finaleScrim')} className="finale-scrim" style={{ opacity: 0 }} aria-hidden="true" />
 
-      <h1 className="sr-only">
-        {EVENT.name} — {EVENT.format}, {EVENT.dates.display}. Powered by TATA STRIVE.
-      </h1>
-
-      <div ref={refFn('title')} className="hero-title" style={{ visibility: 'hidden' }}>
-        <div aria-hidden="true">
-          <span ref={refFn('code')} className="t-code">
-            <Letters text="CODE" />
-          </span>
-          <span ref={refFn('odyssey')} className="t-odyssey">
-            ODYSSEY
-          </span>
-          <span ref={refFn('edition')} className="t-edition">
-            <span>{EVENT.edition}</span>
-          </span>
+      <div ref={refFn('finale')} className="finale" style={{ visibility: 'hidden' }}>
+        <div className="finale-col finale-col--left">
+          <p ref={refFn('fEyebrow')} className="finale-eyebrow">
+            Allies of the Voyage
+          </p>
+          {POWERED_BY && (
+            <div ref={refFn('fLogo')} className="finale-sponsor">
+              <img src={POWERED_BY.logo} width={POWERED_BY.width} height={POWERED_BY.height} alt={POWERED_BY.name} />
+              <span>
+                <small>{POWERED_BY.tier ?? 'Sponsor'}</small>
+                <strong>{POWERED_BY.name}</strong>
+              </span>
+            </div>
+          )}
+          <p ref={refFn('fCopy')} className="finale-copy">
+            {EVENT.winnerOpportunity}
+            <span>Prize pool {EVENT.prizePool.toLowerCase()}.</span>
+          </p>
         </div>
 
-        <p ref={refFn('dates')} className="t-meta t-dates">
-          <span className="rule" aria-hidden="true" />
-          <time dateTime={EVENT.dates.startISO}>{EVENT.dates.display}</time>
-        </p>
-        <p ref={refFn('duration')} className="t-meta t-duration">
-          {EVENT.format}
-        </p>
-
-        {POWERED_BY && (
-          <div ref={refFn('powered')} className="mt-[clamp(1.2rem,3.5vh,2.4rem)] flex items-center gap-4">
-            <img
-              src={POWERED_BY.logo}
-              width={POWERED_BY.width}
-              height={POWERED_BY.height}
-              alt={POWERED_BY.name}
-              className="h-[clamp(3.6rem,9vh,5.6rem)] w-auto rounded-[3px] shadow-[0_10px_30px_-10px_rgb(0_0_0/0.7)] ring-1 ring-ivory/25"
-            />
-            <span className="flex flex-col gap-1">
-              <span className="text-[0.62rem] font-semibold uppercase tracking-[0.42em] text-bronze-light">
-                Powered by
-              </span>
-              <span className="font-display text-[clamp(0.95rem,1.4vw,1.25rem)] tracking-[0.16em] text-ivory">
-                {POWERED_BY.name}
-              </span>
+        <div className="finale-col finale-col--right">
+          <div ref={refFn('fIdentity')} className="finale-identity">
+            <span className="fi-name">
+              Code Odyssey <em>{EVENT.edition}</em>
             </span>
+            <span className="fi-meta">{EVENT.dates.display}</span>
+            <span className="fi-meta fi-meta--dim">{EVENT.format}</span>
           </div>
-        )}
-
-        <div ref={refFn('cta')} className="mt-[clamp(1.2rem,4vh,2.6rem)]" style={{ visibility: 'hidden' }}>
-          <RegisterButton />
+          <div ref={refFn('fCta')} className="finale-cta" style={{ visibility: 'hidden' }}>
+            <RegisterButton />
+          </div>
         </div>
       </div>
 
