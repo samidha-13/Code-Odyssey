@@ -244,6 +244,7 @@ export class Director {
     this.r.resize(w, h, dpr);
     this.atmos.resize(w, h, Math.min(dpr, 1.5));
     this.measureTrack(this.texts.aboutTrack, this.about, this.portrait ? h * 0.42 : h * 0.5);
+    this.chapterP.about = K.about.track[1] - 0.012; // fully in focus, before it drifts on
     this.measureTrack(this.texts.logTrack, this.log, this.logFocus());
     this.measureTrack(this.texts.deckTrack, this.deck, this.deckFocus());
   }
