@@ -43,6 +43,7 @@ Nothing is invented. Every output is a copy, crop, mask, resize or re-encode of 
 | `ocean/ocean-surface-from-below.webp` | p6 | WebP q92 | **Scene 05** just under the surface. Used briefly behind ripple and blur because of its low resolution. |
 | `ocean/ocean-surface.webp` | p7 | WebP q88 | **Scene 05–06** above water, revealed by the moving waterline |
 | `ocean/ocean-open-sea.webp` | n1 | The ship and its wake are removed and the area re-filled with real wave texture from the same rows of the same image | **Scene 06** the open sea the ship sails across, drawn as two drifting, rippling layers. Also the About backdrop. |
+| `ocean/ocean-open-sea-tile.webp` | n1 | The ship-free sea with its broad lighting flattened, made seamlessly tileable on both axes | The sea the ship sails on. It tiles at the ship's own scale and streams past as you scroll, so the ship visibly moves forward. |
 | `ship/csi-ship.webp` | n1 (crop x 471–1173) | Hand-traced hull, sail, yard, mast and flag mask, plus a feathered wake mask (alpha) | **Scene 06** the ship cut-out that sails into frame over the moving sea. The CSI flag and TATA STRIVE sail are untouched. |
 | `ship/csi-ship-scene.webp` | n1 | WebP q86 (full scene) | Dimmed backdrop of **Sponsors**; static fallback |
 | `props/barrel.webp` | n2 | White background keyed out by flood fill from the border, edges eroded | **Scene 04** the barrel that rises beside the voyage log. It is tinted by depth in the shader. |

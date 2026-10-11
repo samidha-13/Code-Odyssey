@@ -19,8 +19,8 @@ export const CHOREO = {
   lift: [0.6, 0.66] as const, // camera lifts off the water, settling over the sea
   shipIn: [0.64, 0.71] as const,
 
-  barrel: { enter: [0.29, 0.345] as const, exit: [0.528, 0.58] as const },
-  log: { header: [0.3, 0.325, 0.53, 0.56] as const, track: [0.31, 0.548] as const },
+  barrel: { enter: [0.29, 0.345] as const, exit: [0.5, 0.578] as const },
+  log: { header: [0.3, 0.325, 0.485, 0.515] as const, track: [0.31, 0.5] as const },
   deck: { track: [0.69, 0.965] as const },
   rays: [0.5, 0.545, 0.57, 0.6] as const,
 } as const;

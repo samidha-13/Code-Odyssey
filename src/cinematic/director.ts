@@ -23,7 +23,7 @@ export const SCENE_ASSETS = {
   depths: 'assets/ocean/ocean-depths.webp',
   rays: 'assets/ocean/ocean-light-rays.webp',
   barrel: 'assets/props/barrel.webp',
-  sea: 'assets/ocean/ocean-open-sea.webp',
+  sea: 'assets/ocean/ocean-open-sea-tile.webp',
   ship: 'assets/ship/csi-ship.webp',
 } as const;
 type SceneKey = keyof typeof SCENE_ASSETS;
@@ -41,8 +41,6 @@ const PORTAL_TARGET = {
   x: WIDE.nx + (CLOSE.targetX - CLOSE.nx) / CLOSE.r,
   y: WIDE.ny + (CLOSE.targetY - CLOSE.ny) / CLOSE.r,
 };
-/** the ship cut-out's offset inside the ship scene it was cut from */
-const SHIP_IN_SEA = { x: 471, y: 0 };
 const Z_CLOSE = 9.4;
 const NAV_CLEARANCE = 84; // px: the CSI flag always sits below the fixed navbar
 
@@ -98,7 +96,7 @@ export class Director {
         img.decoding = 'async';
         img.onload = () => {
           try {
-            this.tex[k] = this.r.upload(img);
+            this.tex[k] = this.r.upload(img, k === 'sea');
           } catch {
             /* a missing plate just isn't drawn */
           }
@@ -298,20 +296,24 @@ export class Director {
     const [b0, b1] = K.breach;
     const breach = easeInOut(seg(p, b0, b1));
     const lineY = lerp(-0.1 * H, 1.15 * H, breach);
-    const seaCover = SEA ? Math.max(W / SEA.w, H / SEA.h) : 1;
-    const seaScale = seaCover * lerp(1.32, 1.08, easeOut3(seg(p, ...K.lift)));
-    let seaRect: [number, number, number, number] = [0, 0, 0, 0];
+    // the ship and the sea share one scale, so its wake sits in waves of the
+    // same size; the sea tiles seamlessly and flows past as the ship sails
+    const shipScale = SH
+      ? this.portrait
+        ? Math.min((0.92 * W) / SH.w, (0.52 * H) / SH.h)
+        : Math.min((H - NAV_CLEARANCE - 0.035 * H) / SH.h, (0.42 * W) / SH.w)
+      : 1;
     if (SEA && p > b0) {
-      const w = SEA.w * seaScale;
-      const h = SEA.h * seaScale;
-      const flow = seg(p, K.lift[0], 1);
-      seaRect = [(W - w) / 2 + Math.sin(t * 0.05) * W * 0.004, (H - h) / 2 + lerp(0.03, -0.03, flow) * h, w, h];
-      // just after the breach the sea still carries the sunlit water's light;
-      // it settles to its own colour as the camera lifts off the surface
+      const sc = shipScale * lerp(1.4, 1, easeOut3(seg(p, ...K.lift)));
+      const sx = W / (SEA.w * sc);
+      const sy = H / (SEA.h * sc);
+      // forward travel: the water streams under the ship as you scroll
+      const travel = seg(p, K.lift[0], 1) * (this.portrait ? 3.2 : 2.4) + t * 0.004;
       const glow = 1 - sstep(b0, K.lift[1], p);
       r.draw(SEA, {
-        rect: seaRect,
-        ripple: [0.0015 + 0.004 * glow, 22, -1],
+        rect: [0, 0, W, H],
+        uv: [0.5 - sx / 2 + Math.sin(t * 0.05) * 0.004, 0.5 - sy / 2 + travel, sx, sy],
+        ripple: [0.0012 + 0.004 * glow, 22, -1],
         brightness: 1 + 0.45 * glow,
         tint: [0.12, 0.5, 0.66],
         tintAmount: 0.22 * glow,
@@ -343,22 +345,30 @@ export class Director {
       const bh = this.portrait ? 0.24 * H : 0.36 * H;
       const restY = this.portrait ? 0.6 * H : 0.54 * H;
       const inT = easeOut3(seg(p, e0, e1));
-      const outT = easeIn2(seg(p, x0, x1));
-      const by = lerp(H + bh, restY, inT) - outT * (restY + bh * 1.2) + Math.sin(t * 0.9) * H * 0.008;
+      const outT = easeInOut(seg(p, x0, x1));
+      // drifts upward with the scroll while the log passes, swaying as it rises;
+      // then recedes towards the bright surface and melts into the glare
+      const drift = seg(p, e1, x0);
+      const rest = restY - drift * 0.12 * H;
+      const by = lerp(H + bh, rest, inT) - outT * (rest - 0.16 * H) + Math.sin(t * 0.9) * H * 0.006;
       this.barrelY = by;
       if (BR && p > e0 && p < x1 + 0.005) {
-        const bw = (BR.w / BR.h) * bh;
-        const bx = this.portrait ? W * 0.83 : W / 2;
+        const shrink = lerp(1, 0.5, outT);
+        const bhh = bh * shrink;
+        const bw = (BR.w / BR.h) * bhh;
+        const bx = (this.portrait ? W * 0.83 : W / 2) + Math.sin(p * 34) * W * 0.012;
         const depth = 1 - sstep(0.36, 0.58, p); // 1 = deep, 0 = just under the surface
-        const rect: [number, number, number, number] = [bx - bw / 2 + Math.sin(t * 0.55) * W * 0.004, by - bh / 2, bw, bh];
-        const rotation = Math.sin(t * 0.6) * 0.045 + Math.sin(t * 0.23) * 0.03 - 0.05;
+        const fade = 1 - sstep(x0 + (x1 - x0) * 0.45, x1, p);
+        const rect: [number, number, number, number] = [bx - bw / 2 + Math.sin(t * 0.55) * W * 0.003, by - bhh / 2, bw, bhh];
+        const rotation = Math.sin(p * 26) * 0.07 + Math.sin(t * 0.6) * 0.025 - 0.04;
         r.draw(BR, {
           rect,
           rotation,
-          brightness: lerp(1.02, 0.5, depth),
+          opacity: fade,
+          brightness: lerp(1.02, 0.5, depth) * (1 + 0.25 * outT),
           saturation: lerp(0.92, 0.55, depth),
           tint: [0.06, 0.24, 0.34],
-          tintAmount: lerp(0.2, 0.55, depth),
+          tintAmount: lerp(0.2, 0.55, depth) + 0.2 * outT,
           ripple: [0.0025, 9, -1],
         });
         // lit from the surface above: the underside falls into the water's colour
@@ -370,7 +380,7 @@ export class Director {
           tint: [0.02, 0.12, 0.2],
           tintAmount: 0.75,
           band: [0.25, 1],
-          opacity: 0.75,
+          opacity: 0.75 * fade,
           ripple: [0.0025, 9, -1],
         });
       }
@@ -383,18 +393,16 @@ export class Director {
     r.fill([1, 0.97, 0.9, 0.16], [1, 0.97, 0.92, 0.05], { opacity: bell(p, (b0 + b1) / 2, 0.012) });
 
     // ------------------------------------- 06 · the CSI ship on that sea
-    if (SH && SEA && p > K.shipIn[0]) {
-      const settled = seaCover * 1.08;
-      const sc = this.portrait ? settled * 0.8 : settled;
-      const w2 = SH.w * sc;
-      const h2 = SH.h * sc;
-      const top = this.portrait ? Math.max(0.5 * H, NAV_CLEARANCE) : NAV_CLEARANCE;
+    if (SH && p > K.shipIn[0]) {
+      const w2 = SH.w * shipScale;
+      const h2 = SH.h * shipScale;
+      const top = this.portrait ? Math.max(0.47 * H, H - h2 + 0.01 * H) : NAV_CLEARANCE;
       const inT = easeOut3(seg(p, ...K.shipIn));
       const sail = seg(p, K.shipIn[1], 1);
-      const y = lerp(-h2 - 0.04 * H, top, inT) + sail * 0.03 * H + Math.sin(t * 0.8) * 0.003 * H;
-      // horizontally the ship rides exactly where it sat in its own sea
-      const x = this.portrait ? W / 2 - w2 / 2 : seaRect[0] + SHIP_IN_SEA.x * sc;
-      r.draw(SH, { rect: [x, y, w2, h2], rotation: Math.sin(t * 0.5) * 0.004 });
+      // pitch and roll in the swell; it presses forward a touch as you scroll
+      const y = lerp(-h2 - 0.04 * H, top, inT) + sail * 0.02 * H + Math.sin(t * 0.8) * 0.003 * H;
+      const x = W / 2 - w2 / 2 + Math.sin(p * 18) * W * 0.006;
+      r.draw(SH, { rect: [x, y, w2, h2], rotation: Math.sin(t * 0.5) * 0.004 + Math.sin(p * 18) * 0.008 });
     }
 
     // lens vignette — always on, subtle

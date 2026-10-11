@@ -228,6 +228,26 @@ def ship_new() -> None:
     soft = np.where(wsum > 0.05, soft, 0)[..., None]
     ocean = arr * (1 - soft) + fill * soft
     webp(Image.fromarray(np.clip(ocean, 0, 255).astype(np.uint8)), "ocean/ocean-open-sea.webp", 86)
+
+    # Seamlessly tileable copy (both axes) so the sea can flow past the ship
+    # indefinitely at the ship's own scale. First flatten the photo's broad
+    # lighting gradient (so tiles don't show as blocks), then blend with a
+    # half-rolled copy — which wraps continuously by construction — using a
+    # variance-preserving blend so the waves keep their contrast.
+    H2, W2 = ocean.shape[:2]
+    oc8 = Image.fromarray(np.clip(ocean, 0, 255).astype(np.uint8))
+    low = np.asarray(oc8.filter(ImageFilter.GaussianBlur(140))).astype(float)
+    mean = ocean.reshape(-1, 3).mean(0)
+    flat = ocean - low + mean
+    def wrap(img, axis):
+        n = img.shape[axis]
+        w = np.sin(np.pi * (np.arange(n) + 0.5) / n) ** 2
+        w = w[:, None, None] if axis == 0 else w[None, :, None]
+        rolled = np.roll(img, n // 2, axis=axis)  # its own seam sits where w == 1
+        return ((img - mean) * w + (rolled - mean) * (1 - w)) / np.sqrt(w**2 + (1 - w) ** 2) + mean
+
+    tile = wrap(wrap(flat, 1), 0)
+    webp(Image.fromarray(np.clip(tile, 0, 255).astype(np.uint8)), "ocean/ocean-open-sea-tile.webp", 86)
     webp(im, "ship/csi-ship-scene.webp", 86)
 
 

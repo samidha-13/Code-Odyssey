@@ -47,6 +47,7 @@ uniform float u_time;
 uniform vec4 u_colA;
 uniform vec4 u_colB;
 uniform vec4 u_rays;         // origin x, origin y (0..1 screen), intensity, spread
+uniform vec4 u_uvx;          // texture offset (xy) and scale (zw); masks still use the quad's own uv
 out vec4 o;
 
 vec4 sampleTex(vec2 uv, float lod) {
@@ -103,7 +104,7 @@ void main() {
     return;
   }
 
-  vec2 uv = v_uv;
+  vec2 uv = u_uvx.xy + v_uv * u_uvx.zw;
   // derivatives before any divergent branch
   vec2 ts = uv * u_texSize;
   float rho = max(length(dFdx(ts)), length(dFdy(ts)));
@@ -155,13 +156,15 @@ export type DrawOpts = {
   ripple?: [number, number, number] | null; // amplitude, frequency, start uv.y
   water?: [number, number, number, number] | null; // lineY, amp, soft, side
   rotation?: number; // radians about the rect centre
+  /** texture offset/scale [ox, oy, sx, sy] — for repeating textures */
+  uv?: [number, number, number, number];
   /** fill only: darken the centre instead of the edges */
   invertVignette?: boolean;
 };
 
 const U = [
   'u_rect', 'u_res', 'u_tex', 'u_texSize', 'u_mode', 'u_opacity', 'u_grade', 'u_tint', 'u_vignette',
-  'u_band', 'u_focus', 'u_blur', 'u_ripple', 'u_water', 'u_time', 'u_colA', 'u_colB', 'u_rays', 'u_rot',
+  'u_band', 'u_focus', 'u_blur', 'u_ripple', 'u_water', 'u_time', 'u_colA', 'u_colB', 'u_rays', 'u_rot', 'u_uvx',
 ] as const;
 type UName = (typeof U)[number];
 
@@ -221,7 +224,7 @@ export class Renderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
   }
 
-  upload(img: HTMLImageElement): Tex {
+  upload(img: HTMLImageElement, repeat = false): Tex {
     const gl = this.gl;
     const tex = gl.createTexture()!;
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -230,8 +233,9 @@ export class Renderer {
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const wrap = repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
     this.textures.push(tex);
     return { tex, w: img.naturalWidth, h: img.naturalHeight };
   }
@@ -291,6 +295,8 @@ export class Renderer {
     gl.uniform1f(L.u_blur, o.blur ?? 0);
     const r = o.ripple;
     gl.uniform4f(L.u_ripple, r?.[0] ?? 0, r?.[1] ?? 0, this.time, r?.[2] ?? -1);
+    const u = o.uv;
+    gl.uniform4f(L.u_uvx, u?.[0] ?? 0, u?.[1] ?? 0, u?.[2] ?? 1, u?.[3] ?? 1);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
