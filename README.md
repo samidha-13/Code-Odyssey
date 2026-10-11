@@ -2,14 +2,13 @@
 
 A cinematic, scroll-driven website for **Code Odyssey 5.0**, the 30-hour offline hackathon run by the Computer Society of India (CSI) Student Chapter at K. J. Somaiya Institute of Technology (KJSIT) on 17–18 October 2026, powered by TATA STRIVE.
 
-Scrolling carries the visitor through one continuous world:
-1. The CODE ODYSSEY 5.0 title is set over the desert at sunset, and dissolves as scrolling begins.
-2. The camera pushes into the buried helmet, and its interior swallows the frame.
-3. The camera passes into the deep ocean.
-4. A barrel rises towards the light, with the voyage log (the hackathon journey and 17–18 October 2026) drifting up beside it.
-5. The camera breaks the surface, tilts down, and the CSI ship sails in under its TATA STRIVE sail while the sponsor details and the invitation appear.
+The whole site is one continuous, scroll-driven journey:
+1. **Home:** CODE ODYSSEY 5.0 hangs over the desert at sunset. When scrolling starts, its letters stream past the camera as it pushes into the buried helmet.
+2. **Into the deep:** the helmet's interior swallows the frame and opens into deep water, and the camera keeps moving forward.
+3. **Timeline:** the camera rises beside a floating barrel while the voyage log (the hackathon journey, 17–18 October 2026) moves up with it.
+4. **About → Sponsors → Register:** the camera breaks the surface into the open sea, and the CSI ship (CSI flag, TATA STRIVE sail) sails in on that same water. While it sails, the hackathon description, key facts, rules, sponsor and registration panels appear beside it.
 
-The About, Timeline, Sponsors and Register chapters follow in the same world.
+The navbar chapters (Home, Timeline, About, Sponsors, Register) are points on that one timeline (`src/cinematic/chapters.ts`). With reduced motion or no WebGL, a static opening is followed by the regular About, Timeline, Sponsors and Register sections.
 
 ```bash
 npm install
@@ -56,10 +55,8 @@ design/source-assets/   untouched originals extracted from the PDF
 
 - **Scroll → progress → frame.** ScrollTrigger pins the hero for 13 viewport heights (11 on phones) and reports progress. A damped follower adds slight camera inertia. The director renders each frame as a pure function of that progress, so scrolling up reverses the whole journey exactly. Nothing goes through React state during scroll.
 - **Why WebGL, and why not Three.js.** All the scenery is 2D renders, so there's no 3D scene to build. WebGL is used for the effects DOM layers can't do cheaply: mip-level depth of field, refraction ripples, the animated waterline, and procedural light shafts. If WebGL2 is unavailable, or the visitor prefers reduced motion, `StaticVoyage` tells the same story with static plates.
-- **Text belongs to the scenes.**
-  - The title dissolves upward with a slight blur as the push-in starts.
-  - Voyage-log entries move in lockstep with the barrel, and each comes into focus as it reaches the barrel's depth.
-  - The ship's sponsor details surface one by one as it sails in.
+- **Text belongs to the scenes.** The title's letters sit in the scene nearer than the helmet, so they stream past the lens as the camera moves in. The voyage-log and ship's-log entries rise in the same rhythm, each coming into focus at the barrel's depth or beside the ship.
+- **One sea.** The ship is drawn at exactly the scale and position it had in its own image, over that image's ship-free water. The sea's colour, light and texture never change once the ship arrives.
 - **Navigation.** Navbar links scroll smoothly. Long jumps, such as going back to Home, dip to dark instead of scrubbing through the whole voyage. Deep links like `/#timeline` work.
 
 See **[ASSETS.md](ASSETS.md)** for the asset manifest, alignment measurements, and the gaps in the supplied material.

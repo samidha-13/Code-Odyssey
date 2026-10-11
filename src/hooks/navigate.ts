@@ -1,3 +1,4 @@
+import { chapters } from '../cinematic/chapters';
 import { prefersReducedMotion } from './useReducedMotion';
 
 /**
@@ -6,9 +7,15 @@ import { prefersReducedMotion } from './useReducedMotion';
  * through the entire voyage in a blur) dip to dark, jump, and fade back.
  */
 export function navigateTo(id: string) {
+  const inCinematic = chapters.scrollFor(id);
   const el = document.getElementById(id);
-  if (!el) return;
-  const top = id === 'home' ? 0 : Math.round(el.getBoundingClientRect().top + window.scrollY);
+  if (inCinematic === null && !el) return;
+  const top =
+    inCinematic !== null
+      ? Math.round(inCinematic)
+      : id === 'home'
+        ? 0
+        : Math.round(el!.getBoundingClientRect().top + window.scrollY);
   const distance = Math.abs(top - window.scrollY);
   history.replaceState(null, '', id === 'home' ? location.pathname + location.search : `#${id}`);
 

@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CHOREO } from '../cinematic/choreography';
 import { Director, type TextRefs } from '../cinematic/director';
 import { Renderer } from '../cinematic/renderer';
+import { chapters } from '../cinematic/chapters';
 import { asset } from '../data/asset';
 import { HeroSection } from '../sections/HeroSection';
 import { IntroTitle } from '../sections/IntroTitle';
@@ -73,6 +74,16 @@ export function CinematicExperience({ onUnsupported }: Props) {
       target = current = st.progress;
     }, el);
 
+    // the navbar's chapters are points on this one timeline
+    const unbind = chapters.bind({
+      scrollFor: (c) => {
+        if (!st) return 0;
+        if (c === 'home') return 0;
+        return st.start + director.chapters()[c] * (st.end - st.start);
+      },
+      current: () => director.chapterAt(st ? st.progress : 0),
+    });
+
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       const dt = Math.min(0.1, (now - last) / 1000);
@@ -104,6 +115,7 @@ export function CinematicExperience({ onUnsupported }: Props) {
 
     return () => {
       alive = false;
+      unbind();
       cancelAnimationFrame(raf);
       ro.disconnect();
       canvas.removeEventListener('webglcontextlost', onLost);

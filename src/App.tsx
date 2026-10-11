@@ -30,16 +30,23 @@ export default function App() {
 
   return (
     <>
-      <a href="#about" className="skip-link">
-        Skip the intro
+      <a href="#main" className="skip-link">
+        Skip to content
       </a>
-      <Navbar />
-      <main>
-        {cinematic ? <CinematicExperience onUnsupported={onUnsupported} /> : <StaticVoyage />}
-        <AboutSection />
-        <TimelineSection />
-        <SponsorsSection />
-        <RegisterSection />
+      <Navbar key={cinematic ? 'journey' : 'sections'} />
+      <main id="main">
+        {cinematic ? (
+          // one continuous journey: desert → deep → barrel log → the ship's log
+          <CinematicExperience onUnsupported={onUnsupported} />
+        ) : (
+          <>
+            <StaticVoyage />
+            <AboutSection />
+            <TimelineSection />
+            <SponsorsSection />
+            <RegisterSection />
+          </>
+        )}
         {/* Selected-team boarding tickets will mount here in a later stage. */}
       </main>
       <Footer />

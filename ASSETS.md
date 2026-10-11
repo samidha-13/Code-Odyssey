@@ -71,3 +71,7 @@ These values live at the top of `src/cinematic/director.ts`.
 ## Does the isolated helmet help the zoom?
 
 No. It is about 240 px wide, while the helmet in the close-up plate is 562 px wide. The portal effect is cut from the close-up instead, which keeps the most detail at the moment of entry.
+
+## Not used in the current cut
+
+To keep a single, continuous ocean, the journey now breaks the surface directly into the ship's open sea. `ocean/ocean-surface.webp` and `ocean/ocean-surface-from-below.webp` are kept in the repository but no longer appear on the site.

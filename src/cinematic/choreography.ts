@@ -1,42 +1,31 @@
 /**
- * Scroll choreography for the pinned cinematic, expressed as progress
- * intervals (0 → 1 across the whole pinned scroll). Tune timing here.
+ * One continuous scroll timeline (0 → 1 across the pinned scroll).
  *
- *   title on the sand → push into the helmet → swallowed by its interior →
- *   deep ocean → barrel + voyage log rise towards the light → surface →
- *   the CSI ship sails in with its allies
+ *   desert + title → push into the helmet → deep ocean → rise with the
+ *   barrel and the voyage log → break the surface into the open sea →
+ *   the CSI ship sails in; about, sponsors and registration ride with it
  */
 export const CHOREO = {
   /** pinned scroll length in viewport heights */
-  lengthVh: { desktop: 14, mobile: 12 },
+  lengthVh: { desktop: 19, mobile: 17 },
 
-  zoomStart: 0.018,
-  zoomEnd: 0.2, // wide → approach → close-up complete
-  portalEnd: 0.29, // camera has passed through the helmet
-  deepEnd: 0.37, // breathing room in the dark
-  riseEnd: 0.735, // camera reaches the underside of the surface
-  breachStart: 0.735,
-  breachEnd: 0.79, // waterline has swept past the lens
-  tiltStart: 0.812,
-  tiltEnd: 0.858,
-  shipIn: [0.83, 0.905] as const,
+  title: [0.003, 0.055] as const, // title flies past the camera
+  zoomStart: 0.012,
+  zoomEnd: 0.16, // wide → approach → close-up
+  portalEnd: 0.235, // through the helmet
+  deepEnd: 0.29, // deep water, still moving forward
+  riseEnd: 0.585, // camera reaches the underside of the surface
+  breach: [0.585, 0.628] as const, // waterline sweeps across the lens
+  lift: [0.6, 0.66] as const, // camera lifts off the water, settling over the sea
+  shipIn: [0.64, 0.71] as const,
 
-  barrel: { enter: [0.372, 0.445] as const, exit: [0.672, 0.73] as const },
-  log: { header: [0.39, 0.42, 0.66, 0.69] as const, track: [0.4, 0.69] as const },
-
-  text: {
-    intro: [0.004, 0.045] as const, // big title fades as scrolling begins
-    hint: [0.0, 0.0, 0.006, 0.02] as const,
-    finale: {
-      eyebrow: [0.872, 0.892] as const,
-      logo: [0.886, 0.91] as const,
-      copy: [0.904, 0.926] as const,
-      identity: [0.918, 0.94] as const,
-      cta: [0.936, 0.958] as const,
-      cue: [0.975, 0.995] as const,
-    },
-  },
+  barrel: { enter: [0.29, 0.345] as const, exit: [0.528, 0.58] as const },
+  log: { header: [0.3, 0.325, 0.53, 0.56] as const, track: [0.31, 0.548] as const },
+  deck: { track: [0.69, 0.965] as const },
+  rays: [0.5, 0.545, 0.57, 0.6] as const,
 } as const;
+
+export type Chapter = 'home' | 'timeline' | 'about' | 'sponsors' | 'register';
 
 export const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 export const seg = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
