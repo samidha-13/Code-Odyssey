@@ -7,7 +7,7 @@
  */
 export const CHOREO = {
   /** pinned scroll length in viewport heights */
-  lengthVh: { desktop: 19, mobile: 17 },
+  lengthVh: { desktop: 22, mobile: 20 },
 
   title: [0.003, 0.055] as const, // title flies past the camera
   zoomStart: 0.012,
@@ -17,12 +17,11 @@ export const CHOREO = {
   riseEnd: 0.585, // camera reaches the underside of the surface
   breach: [0.585, 0.628] as const, // waterline sweeps across the lens
   lift: [0.6, 0.66] as const, // camera lifts off the water, settling over the sea
-  shipIn: [0.64, 0.71] as const,
+  shipIn: [0.63, 0.69] as const,
 
-  barrel: { enter: [0.29, 0.345] as const, exit: [0.5, 0.578] as const },
-  log: { header: [0.3, 0.325, 0.485, 0.515] as const, track: [0.31, 0.5] as const },
-  deck: { track: [0.69, 0.965] as const },
-  rays: [0.5, 0.545, 0.57, 0.6] as const,
+  barrel: { enter: [0.29, 0.35] as const, exit: [0.5, 0.55] as const },
+  log: { header: [0.29, 0.315, 0.453, 0.483] as const, track: [0.29, 0.45] as const },
+  deck: { track: [0.68, 1] as const },
 } as const;
 
 export type Chapter = 'home' | 'timeline' | 'about' | 'sponsors' | 'register';

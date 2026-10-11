@@ -15,10 +15,16 @@ export function StaticVoyage() {
 
       <figure className="relative h-[100svh] min-h-[34rem] overflow-hidden">
         <img
-          src={asset('assets/sand/sand-helmet-01-wide.webp')}
-          alt="An ancient Greek helmet half-buried in desert sand at sunset, a citadel and the Trojan horse beyond."
+          src={asset('assets/sand/sand-background-clean.webp')}
+          alt="Desert sand at sunset with a citadel and the Trojan horse beyond."
           className="absolute inset-0 h-full w-full object-cover object-[48%_60%]"
           fetchPriority="high"
+        />
+        <img
+          src={asset('assets/helmet/helmet-hero.webp')}
+          alt="An ancient Greek helmet half-buried in desert sand."
+          aria-hidden="false"
+          className="absolute left-1/2 top-[58%] h-[52%] w-auto max-w-none -translate-x-1/2 -translate-y-1/2"
         />
         <div className="intro-scrim" aria-hidden="true" />
         <div className="intro" aria-hidden="true">

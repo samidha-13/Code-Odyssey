@@ -6,6 +6,13 @@
 type RegistrationStatus = 'open' | 'coming-soon' | 'closed';
 
 const registrationUrl = (import.meta.env.VITE_REGISTRATION_URL as string | undefined)?.trim() || null;
+const registrationStatusOverride = (
+  (import.meta.env.VITE_REGISTRATION_STATUS as string | undefined)?.trim().toLowerCase() || ''
+) as '' | 'open' | 'closed' | 'coming-soon';
+
+/** Explicit kill-switch: registrations are closed for CO5. */
+const REGISTRATION_CLOSED =
+  registrationStatusOverride === 'open' && registrationUrl ? false : true;
 
 export const EVENT = {
   name: 'Code Odyssey 5.0',
@@ -43,9 +50,9 @@ export const EVENT = {
   },
 
   registration: {
-    /** Set VITE_REGISTRATION_URL (see .env.example) to open registration. */
-    url: registrationUrl,
-    status: (registrationUrl ? 'open' : 'coming-soon') as RegistrationStatus,
+    /** VITE_REGISTRATION_STATUS=open re-opens; anything else stays closed for CO5. */
+    url: REGISTRATION_CLOSED ? null : registrationUrl,
+    status: (REGISTRATION_CLOSED ? 'closed' : registrationUrl ? 'open' : 'coming-soon') as RegistrationStatus,
     deadline: 'Saturday, 12:00 AM (midnight)',
   },
 

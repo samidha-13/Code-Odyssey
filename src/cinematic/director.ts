@@ -16,31 +16,34 @@ import { Renderer, type Tex } from './renderer';
 
 /** Scene plates, in the order they are needed. */
 export const SCENE_ASSETS = {
-  wide: 'assets/sand/sand-helmet-01-wide.webp',
+  bg: 'assets/sand/sand-background-clean.webp',
+  helmet: 'assets/helmet/helmet-hero.webp',
   approach: 'assets/sand/sand-helmet-02-approach.webp',
   closeup: 'assets/sand/sand-helmet-03-closeup.webp',
   portal: 'assets/helmet/helmet-portal.webp',
   depths: 'assets/ocean/ocean-depths.webp',
-  rays: 'assets/ocean/ocean-light-rays.webp',
   barrel: 'assets/props/barrel.webp',
   sea: 'assets/ocean/ocean-open-sea-tile.webp',
   ship: 'assets/ship/csi-ship.webp',
 } as const;
+/** Scroll-scrubbed frame sequence for the ascent (dark water → surface). */
+export const ASCENT_FRAMES = 254;
+export const ascentFrameUrl = (i: number) =>
+  `assets/ocean/ascent-frames/f${String(i).padStart(4, '0')}.jpg`;
 type SceneKey = keyof typeof SCENE_ASSETS;
-const CRITICAL: SceneKey[] = ['wide', 'approach', 'closeup', 'portal'];
+const CRITICAL: SceneKey[] = ['bg', 'helmet'];
 
 /*
- * Helmet alignment, measured on the source plates (see ASSETS.md).
- * The helmet nose-guard tip is the shared anchor; r = plate pixels per
- * wide-shot pixel at that anchor.
+ * Layered hero: one clean desert plate + one helmet cut-out composited on
+ * top. The camera pushes into the helmet continuously (no plate swaps, so no
+ * resolution pop). The base plate is background_image.jpeg (1351x776,
+ * cropped) extended 10% on the right with stretched edge pixels
+ * (1486x776 webp) so the drift never exposes the frame edge:
+ * the helmet nose-guard tip sits at (656, 580); the sprite's own anchor is
+ * its visual centre-bottom (0.5, 0.86 of the cut-out).
  */
-const WIDE = { w: 1307, h: 750, nx: 630, ny: 543 };
-const APPROACH = { nx: 637, ny: 585, r: 3.38 };
-const CLOSE = { nx: 664, ny: 545, r: 3.38 * 2.55, targetX: 661, targetY: 600, gapW: 150, gapH: 150 };
-const PORTAL_TARGET = {
-  x: WIDE.nx + (CLOSE.targetX - CLOSE.nx) / CLOSE.r,
-  y: WIDE.ny + (CLOSE.targetY - CLOSE.ny) / CLOSE.r,
-};
+const BG = { w: 1486, h: 776, nx: 656, ny: 580 };
+const HELMET_ANCHOR = { x: 0.5, y: 0.86 };
 const Z_CLOSE = 9.4;
 const NAV_CLEARANCE = 84; // px: the CSI flag always sits below the fixed navbar
 
@@ -67,6 +70,10 @@ export class Director {
   private r: Renderer;
   private particles: Particles;
   private tex: Partial<Record<SceneKey, Tex>> = {};
+  private ascentImgs: (HTMLImageElement | null)[] = new Array(ASCENT_FRAMES).fill(null);
+  private ascentTex: Tex | null = null;
+  private ascentLoading = new Set<number>();
+  private ascentShown = -1;
   private W = 1;
   private H = 1;
   private flyers: Flyer[] = [];
@@ -110,11 +117,57 @@ export class Director {
         };
         img.src = asset(SCENE_ASSETS[k]);
       });
-    await get('wide');
+    await get('bg');
     onCritical();
     await Promise.all(CRITICAL.slice(1).map(get));
     const rest = (Object.keys(SCENE_ASSETS) as SceneKey[]).filter((k) => !CRITICAL.includes(k));
     await Promise.all(rest.map(get));
+    // warm the ascent frames in the background: never blocks the loader,
+    // and the depths plate covers the section until frames arrive
+    this.warmAscent();
+  }
+
+  /** Preloads a sparse set of ascent frames; neighbours stream in on demand. */
+  private warmAscent() {
+    const step = 8;
+    for (let i = 0; i < ASCENT_FRAMES; i += step) this.fetchAscentFrame(i);
+  }
+
+  private fetchAscentFrame(i: number) {
+    if (this.ascentImgs[i] || this.ascentLoading.has(i)) return;
+    this.ascentLoading.add(i);
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      this.ascentLoading.delete(i);
+      this.ascentImgs[i] = img;
+      // prefetch neighbours so scrubbing never waits
+      if (i + 1 < ASCENT_FRAMES) this.fetchAscentFrame(i + 1);
+      if (i - 1 >= 0) this.fetchAscentFrame(i - 1);
+    };
+    img.onerror = () => this.ascentLoading.delete(i);
+    img.src = asset(ascentFrameUrl(i));
+  }
+
+  /** Returns the ascent frame texture for scroll progress (frame-exact, instant). */
+  private ascentFrame(p: number): Tex | null {
+    const idx = Math.min(ASCENT_FRAMES - 1, Math.max(0, Math.round(seg(p, K.deepEnd, 0.62) * (ASCENT_FRAMES - 1))));
+    // keep neighbours warm around the playhead
+    this.fetchAscentFrame(idx);
+    this.fetchAscentFrame(Math.min(ASCENT_FRAMES - 1, idx + 2));
+    this.fetchAscentFrame(Math.max(0, idx - 2));
+    const img = this.ascentImgs[idx] ?? this.ascentImgs[this.ascentShown];
+    if (!img || !img.complete || img.naturalWidth === 0) return this.ascentTex && this.ascentShown >= 0 ? this.ascentTex : null;
+    if (idx !== this.ascentShown) {
+      try {
+        if (!this.ascentTex) this.ascentTex = this.r.upload(img);
+        else this.r.reupload(this.ascentTex, img);
+        this.ascentShown = idx;
+      } catch {
+        return this.ascentTex;
+      }
+    }
+    return this.ascentTex;
   }
 
   /** where each navbar chapter lives on the timeline */
@@ -189,55 +242,70 @@ export class Director {
     r.begin(0.004, 0.016, 0.032);
 
     // ------------------------------------------------------------ camera
-    const s0 = Math.max(W / WIDE.w, H / WIDE.h);
+    // Layered dolly: the background drifts slowly, the helmet sprite scales
+    // toward the lens on its own curve. No plate swaps → no resolution pop.
+    const s0 = Math.max(W / BG.w, H / BG.h);
     const zoomT = smooth(seg(p, K.zoomStart, K.zoomEnd));
-    let z = Math.exp(lerp(0, Math.log(Z_CLOSE), zoomT));
-    const zP = Math.max((1.25 * W * CLOSE.r) / (CLOSE.gapW * s0), (1.25 * H * CLOSE.r) / (CLOSE.gapH * s0));
+    const pushT = smooth(seg(p, K.zoomStart, K.portalEnd));
+    const z = Math.exp(lerp(0, Math.log(Z_CLOSE), zoomT));
     const pe = seg(p, K.zoomEnd, K.portalEnd); // portal progress
-    if (pe > 0) z = Math.exp(lerp(Math.log(Z_CLOSE), Math.log(zP), Math.pow(pe, 1.6)));
-    const s = s0 * z;
+    const s = s0 * (1 + 0.12 * zoomT);
 
-    const sx0 = W / 2 + (WIDE.nx - WIDE.w / 2) * s0;
-    const sy0 = H / 2 + (WIDE.ny - WIDE.h / 2) * s0;
-    const k = smooth(seg(p, K.zoomEnd, K.zoomEnd + 0.05));
-    const Sx = lerp(lerp(sx0, W / 2, sstep(1, 4, z)), W / 2, k);
-    const Sy = lerp(sy0, H / 2, k);
-    const Tx = lerp(WIDE.nx, PORTAL_TARGET.x, k);
-    const Ty = lerp(WIDE.ny, PORTAL_TARGET.y, k);
-    const hx = Sx + (WIDE.nx - Tx) * s; // helmet anchor on screen
-    let hy = Sy + (WIDE.ny - Ty) * s;
-    if (tex.closeup && z > 6) {
-      const bottom = hy + ((tex.closeup.h - CLOSE.ny) * s) / CLOSE.r;
-      if (bottom < H + 2) hy += H + 2 - bottom;
-    }
-    const place = (t: Tex, nx: number, ny: number, ratio: number, scale: number): [number, number, number, number] => [
-      hx - (nx * scale) / ratio,
-      hy - (ny * scale) / ratio,
-      (t.w * scale) / ratio,
-      (t.h * scale) / ratio,
-    ];
+    // background anchor on screen (cover-fit, slow drift)
+    const sx0 = W / 2 + (BG.nx - BG.w / 2) * s0;
+    const sy0 = H / 2 + (BG.ny - BG.h / 2) * s0;
+    const Sx = lerp(sx0, W / 2, sstep(1, 4, z));
+    const Sy = lerp(sy0, H / 2, pushT * 0.4);
+    const hx = Sx;
+    const hy = Sy;
 
     // ------------------------------------------- 01 · desert and helmet
-    // (never blurred: parallax alone carries the depth)
+    // One background plate + one helmet sprite composited on top. The helmet
+    // starts seated in the sand at its anchor and pushes toward the lens;
+    // the background only drifts. Never blurred: parallax carries the depth.
     const inDesert = p < K.portalEnd + 0.01;
-    if (inDesert && tex.wide && z < 10.6) {
-      const A = tex.wide;
-      const aOp = 1 - sstep(9, 10.6, z);
-      r.draw(A, { rect: place(A, WIDE.nx, WIDE.ny, 1, s0 * Math.pow(z, 0.88)), opacity: aOp });
-      r.draw(A, { rect: place(A, WIDE.nx, WIDE.ny, 1, s), opacity: aOp, band: [0.585, 0.665] });
-      r.draw(A, { rect: place(A, WIDE.nx, WIDE.ny, 1, s0 * Math.pow(z, 1.12)), opacity: aOp, band: [0.8, 0.94] });
+    const BGX = tex.bg;
+    if (inDesert && BGX) {
+      const bw = BGX.w * s;
+      const bh = BGX.h * s;
+      // clamp so the plate always covers the frame while it drifts
+      const bx = Math.min(0, Math.max(W - bw, Sx - BG.nx * s));
+      const by = Math.min(0, Math.max(H - bh, Sy - BG.ny * s));
+      r.draw(BGX, { rect: [bx, by, bw, bh], opacity: 1 - sstep(0.9, 1, pe) });
+      // gentle foreground parallax: a second pass of the lower dunes
+      const pw = bw * (1 + 0.06 * zoomT);
+      const ph = bh * (1 + 0.06 * zoomT);
+      r.draw(BGX, {
+        rect: [Math.min(0, Math.max(W - pw, bx)), Math.min(0, Math.max(H - ph, by - H * 0.02 * zoomT)), pw, ph],
+        opacity: 1 - sstep(0.9, 1, pe),
+        band: [0.72, 0.95],
+      });
     }
-    const B = tex.approach;
-    if (inDesert && B && z > 2 && z < 12.5) {
-      const vf = 0.4 * (1 - sstep(4.3, 6.2, z));
-      r.draw(B, {
-        rect: place(B, APPROACH.nx, APPROACH.ny, APPROACH.r, s),
-        opacity: sstep(2.2, 3.9, z) * (1 - sstep(10.5, 12.5, z)),
-        vignette: vf > 0.01 ? [0.5, 0.5, vf] : null,
+    const HELM = tex.helmet;
+    if (inDesert && HELM) {
+      // helmet rests at ~26% of screen height, then swells to swallow frame
+      const helmH0 = H * 0.42;
+      const helmScale = helmH0 / HELM.h;
+      const helmM = Math.exp(Math.log(4.6) * pushT);
+      const hw = HELM.w * helmScale * helmM;
+      const hh = helmH0 * helmM;
+      const hx0 = hx - HELMET_ANCHOR.x * hw;
+      const hy0 = hy - HELMET_ANCHOR.y * hh;
+      const helmOp = 1 - sstep(0.93, 1, pe);
+      r.draw(HELM, {
+        rect: [hx0, hy0, hw, hh],
+        opacity: helmOp,
+        brightness: lerp(1, 0.35, Math.pow(pe, 0.75)),
+        saturation: lerp(1, 0.6, pe),
+        tint: [0.02, 0.06, 0.12],
+        tintAmount: 0.4 * pe,
       });
     }
 
-    // ------------------------------------------- 02 · into the helmet
+    // ------------------------------------------- 02 · through the helmet
+    // The helmet sprite itself is the portal: deep water fades in behind it
+    // as the sprite swells past the lens. Legacy closeup/portal plates are
+    // kept as an enhancement layer when available.
     const C = tex.closeup;
     const CP = tex.portal;
     const holeOpen = sstep(K.zoomEnd, K.zoomEnd + 0.025, p);
@@ -261,17 +329,18 @@ export class Director {
       });
     }
 
-    if (C && z > 5 && p < K.portalEnd + 0.01) {
-      const cOp = sstep(6, 8.7, z) * (1 - sstep(0.9, 1, pe));
-      const vf = 0.32 * (1 - sstep(8.7, 10, z));
+    if (C && p > K.zoomEnd - 0.02 && p < K.portalEnd + 0.01) {
+      // legacy enhancement: brief close-up texture inside the swelling sprite
+      const cOp = sstep(K.zoomEnd - 0.02, K.zoomEnd + 0.03, p) * (1 - sstep(0.9, 1, pe));
       const grade = {
         brightness: lerp(1, 0.2, Math.pow(pe, 0.75)), // light falls away inside the helmet
         saturation: lerp(1, 0.5, pe),
         tint: [0.02, 0.06, 0.12] as [number, number, number],
         tintAmount: 0.45 * pe,
-        vignette: vf > 0.01 ? ([0.5, 0.5, vf] as [number, number, number]) : null,
       };
-      const rect = place(C, CLOSE.nx, CLOSE.ny, CLOSE.r, s);
+      const cw = W * (1 + 2.2 * pe);
+      const ch = H * (1 + 2.2 * pe);
+      const rect: [number, number, number, number] = [(W - cw) / 2, (H - ch) / 2, cw, ch];
       if (CP && holeOpen > 0) r.draw(CP, { rect, opacity: cOp, ...grade });
       r.draw(C, { rect, opacity: cOp * (1 - (CP ? holeOpen : 0)), ...grade });
     }
@@ -321,20 +390,33 @@ export class Director {
     }
 
     // ------------------------------- 03-04 · ascent with barrel and log
-    const R = tex.rays;
-    if (R && p > K.deepEnd - 0.01 && p < b1 + 0.01) {
-      const rs = Math.max(W / R.w, (1.9 * H) / R.h) * 1.02;
-      const rw = R.w * rs;
-      const rh = R.h * rs;
-      r.draw(R, {
-        rect: [(W - rw) / 2 + Math.sin(t * 0.08) * W * 0.004, lerp(H - rh, -0.02 * rh, easeInOut(seg(p, K.deepEnd, K.riseEnd + 0.005))), rw, rh],
+    // Backdrop: the scrubbed underwater→surface video when live, falling
+    // back to the re-graded depths plate until its first frame arrives.
+    const ascentTex = this.ascentFrame(p);
+    const ascentLive = !!ascentTex && p > K.deepEnd - 0.01 && p < b1 + 0.01;
+    if (ascentLive && ascentTex) {
+      const cover = Math.max(W / ascentTex.w, H / ascentTex.h);
+      const vw = ascentTex.w * cover;
+      const vh = ascentTex.h * cover;
+      r.draw(ascentTex, {
+        rect: [(W - vw) / 2, (H - vh) / 2, vw, vh],
         opacity: sstep(K.deepEnd - 0.01, K.deepEnd + 0.05, p),
-        // brightens on the way up, then deepens toward the sea's colour at the breach
-        brightness: lerp(0.28, 1.04, sstep(0.38, 0.57, p)) * lerp(1, 0.72, sstep(b0, b1, p)),
+        ripple: [0.0012 + 0.0022 * sstep(0.55, 0.6, p), 18, -1],
+        water: p > b0 ? [lineY, 14, 8, 1] : null,
+      });
+    }
+    const D2 = tex.depths;
+    if (D2 && p > K.deepEnd - 0.01 && p < b1 + 0.01 && !ascentLive) {
+      const liftT = sstep(0.36, 0.58, p);
+      r.draw(D2, {
+        rect: [0, 0, W, H],
+        opacity: sstep(K.deepEnd - 0.01, K.deepEnd + 0.05, p),
+        brightness: lerp(0.35, 1.1, liftT),
+        saturation: lerp(0.6, 1, liftT),
         tint: [0.03, 0.17, 0.3],
         tintAmount: 0.35 * sstep(b0, b1, p),
         ripple: [0.0012 + 0.0022 * sstep(0.55, 0.6, p), 18, -1],
-        water: p > b0 ? [lineY, 14, 8, 1] : null, // only the part below the waterline
+        water: p > b0 ? [lineY, 14, 8, 1] : null,
       });
     }
 
@@ -345,30 +427,30 @@ export class Director {
       const bh = this.portrait ? 0.24 * H : 0.36 * H;
       const restY = this.portrait ? 0.6 * H : 0.54 * H;
       const inT = easeOut3(seg(p, e0, e1));
-      const outT = easeInOut(seg(p, x0, x1));
-      // drifts upward with the scroll while the log passes, swaying as it rises;
-      // then recedes towards the bright surface and melts into the glare
+      // rises from below, holds at centre beside the log, then dissolves
+      // in place — never flies off the top
       const drift = seg(p, e1, x0);
       const rest = restY - drift * 0.12 * H;
-      const by = lerp(H + bh, rest, inT) - outT * (rest - 0.16 * H) + Math.sin(t * 0.9) * H * 0.006;
+      const by = lerp(H + bh, rest, inT) + Math.sin(t * 0.9) * H * 0.006;
       this.barrelY = by;
       if (BR && p > e0 && p < x1 + 0.005) {
-        const shrink = lerp(1, 0.5, outT);
+        const dissolve = sstep(x0 + (x1 - x0) * 0.35, x1, p);
+        const shrink = lerp(1, 0.92, dissolve);
         const bhh = bh * shrink;
         const bw = (BR.w / BR.h) * bhh;
         const bx = (this.portrait ? W * 0.83 : W / 2) + Math.sin(p * 34) * W * 0.012;
         const depth = 1 - sstep(0.36, 0.58, p); // 1 = deep, 0 = just under the surface
-        const fade = 1 - sstep(x0 + (x1 - x0) * 0.45, x1, p);
+        const fade = 1 - dissolve;
         const rect: [number, number, number, number] = [bx - bw / 2 + Math.sin(t * 0.55) * W * 0.003, by - bhh / 2, bw, bhh];
         const rotation = Math.sin(p * 26) * 0.07 + Math.sin(t * 0.6) * 0.025 - 0.04;
         r.draw(BR, {
           rect,
           rotation,
           opacity: fade,
-          brightness: lerp(1.02, 0.5, depth) * (1 + 0.25 * outT),
-          saturation: lerp(0.92, 0.55, depth),
+          brightness: lerp(1.02, 0.5, depth) * lerp(1, 1.35, dissolve),
+          saturation: lerp(0.92, 0.55, depth) * (1 - 0.4 * dissolve),
           tint: [0.06, 0.24, 0.34],
-          tintAmount: lerp(0.2, 0.55, depth) + 0.2 * outT,
+          tintAmount: lerp(0.2, 0.55, depth),
           ripple: [0.0025, 9, -1],
         });
         // lit from the surface above: the underside falls into the water's colour
@@ -386,11 +468,9 @@ export class Director {
       }
     }
 
-    // sunlight shafts: only briefly, as the surface comes near
-    const [ra, rb, rc, rd] = K.rays;
-    r.rays(0.4 * sstep(ra, rb, p) * (1 - sstep(rc, rd, p)), 0.5 + Math.sin(t * 0.05) * 0.03, -0.1, 1);
-    // the lens clears as it leaves the water
-    r.fill([1, 0.97, 0.9, 0.16], [1, 0.97, 0.92, 0.05], { opacity: bell(p, (b0 + b1) / 2, 0.012) });
+    // surfacing light: no god-rays — only a brief waterline shimmer as the
+    // lens breaks the surface. The breach sweep + ripple carry the ascent.
+    r.fill([0.75, 0.9, 1, 0.05], [0.75, 0.9, 1, 0.02], { opacity: bell(p, (b0 + b1) / 2, 0.02) * 0.5 });
 
     // ------------------------------------- 06 · the CSI ship on that sea
     if (SH && p > K.shipIn[0]) {

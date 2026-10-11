@@ -240,6 +240,46 @@ export class Renderer {
     return { tex, w: img.naturalWidth, h: img.naturalHeight };
   }
 
+  /** Allocates a video texture (no mipmaps — video frames update per-frame). */
+  uploadVideo(video: HTMLVideoElement): Tex {
+    const gl = this.gl;
+    const tex = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // 1x1 black placeholder so draws before first frame are safe
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+    this.textures.push(tex);
+    return { tex, w: video.videoWidth || 16, h: video.videoHeight || 9 };
+  }
+
+  /** Pushes the current video frame to the GPU. Returns true when a frame is live. */
+  updateVideo(t: Tex, video: HTMLVideoElement): boolean {
+    if (video.readyState < 2 || video.videoWidth === 0) return false;
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, t.tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+    if (t.w !== video.videoWidth || t.h !== video.videoHeight) {
+      t.w = video.videoWidth;
+      t.h = video.videoHeight;
+    }
+    return true;
+  }
+
+  /** Replaces a texture's contents with a new image (frame-sequence scrubbing). */
+  reupload(t: Tex, img: HTMLImageElement): void {
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, t.tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    t.w = img.naturalWidth;
+    t.h = img.naturalHeight;
+  }
+
   resize(cssW: number, cssH: number, dpr: number) {
     const c = this.gl.canvas as HTMLCanvasElement;
     const pw = Math.max(1, Math.round(cssW * dpr));

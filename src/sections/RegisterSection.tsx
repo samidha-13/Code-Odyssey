@@ -34,10 +34,10 @@ export function RegisterSection() {
         </p>
         <h2 id="register-title" className="mt-8" data-reveal="mask">
           <span className="reveal-line font-serif text-[clamp(1.6rem,3vw,2.6rem)] font-light italic text-ivory/85">
-            <span>The shore of the unknown</span>
+            <span>{status === 'closed' ? 'The voyage has set sail' : 'The shore of the unknown'}</span>
           </span>
           <span className="reveal-line font-display text-[clamp(2.6rem,6.6vw,6rem)] leading-[1] tracking-[0.04em] text-ivory">
-            <span>awaits your crew</span>
+            <span>{status === 'closed' ? 'registrations closed' : 'awaits your crew'}</span>
           </span>
         </h2>
 

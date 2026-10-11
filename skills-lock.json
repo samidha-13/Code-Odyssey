@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skills": {
+    "make-interfaces-feel-better": {
+      "source": "jakubkrehel/make-interfaces-feel-better",
+      "sourceType": "github",
+      "skillPath": "skills/make-interfaces-feel-better/SKILL.md",
+      "computedHash": "ee95073d274bd8f792f917a2b2c2963d46c1b31c81723e6ef3c63ffe33bd681c"
+    },
+    "threejs-webgl": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/threejs-webgl/SKILL.md",
+      "computedHash": "2fb912c851db124e212afdd2e80b5213f756ca62af6e2eb50de320f6f8ba4f9e"
+    },
+    "gsap-scrolltrigger": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/gsap-scrolltrigger/SKILL.md",
+      "computedHash": "8d827576329ffb47e7f434dce71e681627f29c513eefe3698584830f5c90099f"
+    },
+    "react-three-fiber": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/react-three-fiber/SKILL.md",
+      "computedHash": "f9747e9e93bf939a1eff4a1c845146f38d8f9e06655be58653a9f95f36c342cc"
+    },
+    "motion-framer": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/motion-framer/SKILL.md",
+      "computedHash": "37b0a6fb2470feca368cf96f8058456b81dd17385a9c35334b794628d7c7981b"
+    },
+    "web3d-integration-patterns": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/web3d-integration-patterns/SKILL.md",
+      "computedHash": "3c5f22042307a59751de6684fdae033c011048d5fe8d3a7525b9e51564254034"
+    },
+    "lightweight-3d-effects": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/lightweight-3d-effects/SKILL.md",
+      "computedHash": "d0ae4223cce30dbf075a2ce8e6c12a51dc66f996384751820f15f6dd7228d8f7"
+    },
+    "pixijs-2d": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/pixijs-2d/SKILL.md",
+      "computedHash": "bbae14f6bd724f7a394d3f9e5b6326661806d4f171f81b8e92c03ad8c86f7f9d"
+    }
+  }
+}
