@@ -7,7 +7,7 @@ type Props = { refFn: (k: keyof TextRefs) => (node: HTMLElement | null) => void 
 
 /**
  * The ship's log: while the CSI ship sails, the hackathon's facts rise beside
- * it — the numbers, the articles, the allies, registration and the shortlist —
+ * it — the numbers, the articles, the allies, and registration —
  * in the same rhythm as the voyage log beside the barrel.
  */
 export function HeroSection({ refFn }: Props) {
@@ -94,17 +94,6 @@ export function HeroSection({ refFn }: Props) {
           </p>
         </li>
 
-        <li data-item="" data-side="r" className="deck-item deck-item--shortlist">
-          <p className="deck-eyebrow">{EVENT.shortlist.title}</p>
-          <p className="deck-shortlist">{EVENT.shortlist.status}</p>
-          <p className="deck-body deck-body--dim">
-            Shortlisted teams will be announced on the official website and on Instagram{' '}
-            <a href={EVENT.social.instagram.url} target="_blank" rel="noopener noreferrer">
-              {EVENT.social.instagram.handle}
-            </a>
-            .
-          </p>
-        </li>
       </ol>
     </>
   );

@@ -1,5 +1,11 @@
 import { asset } from '../data/asset';
 import { CHOREO as K, type Chapter, easeInOut, easeOut3, lerp, seg, smooth, sstep } from './choreography';
+
+const easeOutBack = (t: number) => {
+  const c1 = 1.5;
+  const c3 = c1 + 1;
+  return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
+};
 import { Particles } from './particles';
 import { Renderer, type Tex } from './renderer';
 
@@ -23,6 +29,8 @@ export type TextKey =
   | 'introScrim'
   | 'hint'
   | 'aboutTrack'
+  | 'aboutScrim'
+  | 'paperNote'
   | 'logHeader'
   | 'logTrack'
   | 'deckTrack'
@@ -125,12 +133,15 @@ export class Director {
   private films: Record<FilmKey, Film>;
   private W = 1;
   private H = 1;
-  private about: Track = { items: [], startY: 0, endY: 0, range: K.about.track };
+  private aboutLines: HTMLElement[] = [];
+  private inkLines: HTMLElement[] = [];
   private log: Track = { items: [], startY: 0, endY: 0, range: K.log.track };
   private deck: Track = { items: [], startY: 0, endY: 0, range: K.deck.track };
   private chapterP: Record<Chapter, number> = { home: 0, about: 0.25, timeline: 0.36, sponsors: 0.9, register: 0.94 };
   private mobile: boolean;
   portrait = false;
+  private paperRect: Rect = [0, 0, 1, 1];
+  private paperSet: 'd' | 'm' = 'd';
 
   constructor(
     renderer: Renderer,
@@ -243,8 +254,9 @@ export class Director {
     this.portrait = w / h < 0.95;
     this.r.resize(w, h, dpr);
     this.atmos.resize(w, h, Math.min(dpr, 1.5));
-    this.measureTrack(this.texts.aboutTrack, this.about, this.portrait ? h * 0.42 : h * 0.5);
-    this.chapterP.about = K.about.track[1] - 0.012; // fully in focus, before it drifts on
+    this.aboutLines = Array.from(this.texts.aboutTrack?.querySelectorAll<HTMLElement>('[data-line]') ?? []);
+    this.inkLines = Array.from(this.texts.paperNote?.querySelectorAll<HTMLElement>('[data-ink]') ?? []);
+    this.chapterP.about = K.about.in[1] + 0.02; // fully revealed
     this.measureTrack(this.texts.logTrack, this.log, this.logFocus());
     this.measureTrack(this.texts.deckTrack, this.deck, this.deckFocus());
   }
@@ -313,6 +325,8 @@ export class Director {
       // the camera leans into the unrolled paper while it crumbles away on
       // the wind (the same dissolve as the title), uncovering the open sea
       const rect = this.cover(...bottle.size, 1 + 0.35 * off);
+      this.paperRect = rect;
+      this.paperSet = bottle.size[0] < 800 ? 'm' : 'd';
       const fall = lerp(0, 1.32, seg(p, po0, po1));
       bottle.draw(r, seg(p, ...K.bottle) * (bottle.n - 1), rect, sstep(j0, j1, p), fall > 0 ? { dissolve: fall, dissolveLook: [0.035, 0.12, 2.6] } : {});
     }
@@ -395,8 +409,62 @@ export class Director {
     css(T.introScrim, 'opacity', f3(1 - sstep(0.004, 0.06, dissolve)));
     css(T.hint, 'opacity', f3(1 - sstep(0.002, 0.016, p)));
 
-    // ---- about rises out of the dark water as the camera travels on
-    this.runTrack(T.aboutTrack, this.about, p, this.portrait ? H * 0.42 : H * 0.5, [H * 0.12, H * 1.02], false);
+    // ---- about pops out of the dark, line by line, as the camera enters
+    {
+      const [a0, a1] = K.about.in;
+      const [o0, o1] = K.about.out;
+      const on = p > a0 - 0.002 && p < o1 + 0.002;
+      css(T.aboutTrack, 'visibility', on ? 'visible' : 'hidden');
+      const out = easeInOut(seg(p, o0, o1));
+      css(T.aboutScrim, 'opacity', f3(sstep(a0, a1, p) * (1 - out)));
+      if (on) {
+        const n = this.aboutLines.length;
+        const span = a1 - a0;
+        this.aboutLines.forEach((el, i) => {
+          const st = a0 + (i / Math.max(1, n)) * span * 0.55;
+          const tt = seg(p, st, st + span * 0.45);
+          const e = easeOutBack(tt);
+          css(el, 'opacity', f3(Math.min(1, tt * 1.6)));
+          css(el, 'transform', `translate3d(0, ${f3((1 - e) * 46)}px, 0) scale(${f3(0.86 + 0.14 * e)})`);
+          css(el, 'filter', tt > 0.98 ? 'none' : `blur(${f3((1 - tt) * 10)}px)`);
+        });
+        css(T.aboutTrack, 'opacity', f3(1 - out));
+        css(T.aboutTrack, 'transform', `translate3d(-50%, calc(-50% - ${f3(out * H * 0.18)}px), 0) scale(${f3(1 + out * 0.06)})`);
+      }
+    }
+
+    // ---- shortlisted teams, written in ink on the unrolled paper
+    {
+      const [k0, k1] = K.ink;
+      const [po0, po1] = K.paperOff;
+      const gone = sstep(po0, po0 + (po1 - po0) * 0.45, p);
+      const on = p > k0 - 0.002 && gone < 0.999;
+      css(T.paperNote, 'visibility', on ? 'visible' : 'hidden');
+      if (on) {
+        // the paper's inner writing area, in source-frame pixels
+        const [rx, ry, rw, rh] = this.paperRect;
+        const srcW = this.paperSet === 'm' ? 405 : 1278;
+        const ox = this.paperSet === 'm' ? 436.5 : 0;
+        const sx = rw / srcW;
+        const sy = rh / 720;
+        const x0 = Math.max(rx + (220 - ox) * sx, rx + 12, 14);
+        const x1 = Math.min(rx + (1060 - ox) * sx, rx + rw - 12, this.W - 14);
+        const y0 = ry + 110 * sy;
+        const y1 = ry + 640 * sy;
+        css(T.paperNote, 'transform', `translate3d(${f3(x0)}px, ${f3(y0)}px, 0)`);
+        css(T.paperNote, 'width', `${f3(Math.max(10, x1 - x0))}px`);
+        css(T.paperNote, 'height', `${f3(Math.max(10, y1 - y0))}px`);
+        css(T.paperNote, '--paper-scale', f3(Math.min((x1 - x0) / 700, (y1 - y0) / 430)));
+        css(T.paperNote, 'opacity', f3(1 - gone));
+        const n = this.inkLines.length;
+        this.inkLines.forEach((el, i) => {
+          const st = k0 + (i / n) * (k1 - k0) * 0.7;
+          const tt = smooth(seg(p, st, st + (k1 - k0) * 0.32));
+          css(el, 'clip-path', `inset(-10% ${f3((1 - tt) * 100)}% -10% -2%)`);
+          css(el, 'opacity', f3(Math.min(1, tt * 2)));
+        });
+      }
+    }
 
     // ---- the voyage log rises beside the bottle
     const [ha, hb, hc, hd] = K.log.header;

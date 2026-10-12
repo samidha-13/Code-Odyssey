@@ -382,15 +382,24 @@ body {
 }
 
 /* ---- 02 · about, in the deep water beyond the helmet ---- */
-.deep-track {
+.deep-scrim {
   position: absolute;
-  inset-inline: 0;
-  top: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  inset: 0;
   pointer-events: none;
-  will-change: transform;
+  background: radial-gradient(48% 46% at 50% 50%, rgb(2 8 16 / 0.62), rgb(2 8 16 / 0.25) 60%, transparent 85%);
+}
+.deep-block {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  transform: translate3d(-50%, -50%, 0);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.deep-block [data-line] {
+  will-change: transform, opacity, filter;
+  transform-origin: 50% 70%;
 }
 .deep-item {
   --focus: 0;
@@ -443,6 +452,68 @@ body {
   .deep-body {
     font-size: 1.02rem;
   }
+}
+
+/* ---- 04 · shortlisted teams, in ink on the paper from the bottle ---- */
+.paper-note {
+  --paper-scale: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.paper-note-inner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 700px;
+  transform: translate(-50%, -50%) scale(var(--paper-scale));
+  text-align: center;
+  color: #3b2412;
+  mix-blend-mode: multiply;
+}
+.paper-note [data-ink] {
+  will-change: clip-path, opacity;
+}
+.paper-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: #6b4321;
+}
+.paper-line {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 66px;
+  line-height: 1.02;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.paper-line--soft {
+  margin-top: 6px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 50px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #4a2d16;
+}
+.paper-rule {
+  margin-top: 14px;
+  font-size: 22px;
+  color: #7a4f28;
+}
+.paper-sign {
+  margin-top: 26px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  color: #5c3a1d;
 }
 
 /* ---- 06 · the ship's log, beside the sailing ship ---- */

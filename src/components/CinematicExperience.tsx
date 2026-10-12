@@ -10,6 +10,7 @@ import { HeroSection } from '../sections/HeroSection';
 import { IntroTitle } from '../sections/IntroTitle';
 import { VoyageLog } from '../sections/VoyageLog';
 import { AboutDeep } from '../sections/AboutDeep';
+import { PaperNote } from '../sections/PaperNote';
 
 type Props = { onUnsupported: () => void };
 
@@ -149,6 +150,7 @@ export function CinematicExperience({ onUnsupported }: Props) {
       </div>
       <AboutDeep refFn={ref} />
       <VoyageLog refFn={ref} />
+      <PaperNote refFn={ref} />
       <HeroSection refFn={ref} />
 
       <div className="loader" data-done={ready} aria-hidden={ready}>
