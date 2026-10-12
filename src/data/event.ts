@@ -60,6 +60,8 @@ export const EVENT = {
   problemStatements: {
     title: 'Problem Statements',
     status: 'To be released soon',
+    /** Add the statements here when they are released; the page lists them in order. */
+    statements: [] as { id: string; title: string; track?: string; summary: string }[],
     /** A page of its own, beside index.html (see vite.config.ts). */
     href: 'problem-statements.html',
     submission: {

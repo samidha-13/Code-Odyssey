@@ -1,35 +1,22 @@
-import { useRef } from 'react';
 import { SubmissionCountdown } from '../components/SubmissionCountdown';
 import { asset } from '../data/asset';
 import { EVENT } from '../data/event';
 
-/** the bare scroll of parchment the ink is written on (public/) */
-const PAPER = 'page_background-removebg-preview.png';
+/**
+ * A torn page with no ends (public/Problemstatements_background-removebg-preview.png),
+ * stacked with its mirror image into ps-paper-tile.png so it repeats without a
+ * seam and grows as long as the text on it.
+ */
+const PAPER = 'assets/textures/ps-paper-tile.png';
 
 /**
- * The problem statements, on a sheet of old parchment in the same ink as the
- * shortlist on the bottle's paper. Sealed until they are released; the
- * hourglass counts down to the submission deadline.
+ * The problem statements, in ink on a long sheet of old paper, in the same
+ * hand as the shortlist on the bottle's paper. Sealed until they are
+ * released; the hourglass counts down to the submission deadline.
  */
 export function ProblemStatementsPage() {
-  const sheet = useRef<HTMLDivElement>(null);
-
-  // the sheet leans toward the pointer, a few degrees at most
-  const onMove = (e: React.PointerEvent) => {
-    const el = sheet.current;
-    if (!el || e.pointerType !== 'mouse') return;
-    const b = el.getBoundingClientRect();
-    const x = (e.clientX - b.left) / b.width - 0.5;
-    const y = (e.clientY - b.top) / b.height - 0.5;
-    el.style.setProperty('--ry', `${(x * 5).toFixed(2)}deg`);
-    el.style.setProperty('--rx', `${(-y * 4).toFixed(2)}deg`);
-  };
-  const onLeave = () => {
-    sheet.current?.style.setProperty('--ry', '0deg');
-    sheet.current?.style.setProperty('--rx', '0deg');
-  };
-
   const ps = EVENT.problemStatements;
+  const released = ps.statements.length > 0;
   return (
     <div className="ps-page" style={{ ['--grain' as string]: `url(${asset('assets/textures/grain.png')})` }}>
       <header className="ps-top">
@@ -42,9 +29,9 @@ export function ProblemStatementsPage() {
         <span className="ps-mark">CSI · KJSIT</span>
       </header>
 
-      <main className="ps-stage" onPointerMove={onMove} onPointerLeave={onLeave}>
-        <div ref={sheet} className="ps-sheet" style={{ backgroundImage: `url(${asset(PAPER)})` }}>
-          <article className="ps-ink">
+      <main className="ps-stage">
+        <article className="ps-sheet" style={{ backgroundImage: `url(${asset(PAPER)})` }}>
+          <div className="ps-ink">
             <p data-ink="" className="ps-eyebrow">
               {EVENT.name} · {EVENT.organizer.shortName}
             </p>
@@ -54,21 +41,48 @@ export function ProblemStatementsPage() {
             <p data-ink="" className="ps-rule" aria-hidden="true">
               ✦
             </p>
-            <p data-ink="" className="ps-soft">
-              {ps.status}
-            </p>
-            <p data-ink="" className="ps-body">
-              The challenges are still sealed. Keep watch on {EVENT.social.instagram.handle}.
-            </p>
+
+            {released ? (
+              <ol data-ink="" className="ps-list">
+                {ps.statements.map((s, i) => (
+                  <li key={s.id} className="ps-item">
+                    <span className="ps-num">{String(i + 1).padStart(2, '0')}</span>
+                    <div>
+                      {s.track && <p className="ps-track">{s.track}</p>}
+                      <h2 className="ps-item-title">{s.title}</h2>
+                      <p className="ps-item-body">{s.summary}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <>
+                <p data-ink="" className="ps-soft">
+                  {ps.status}
+                </p>
+                <p data-ink="" className="ps-body">
+                  The challenges of this voyage are still sealed. They will be written on this page before the crews
+                  set sail on {EVENT.dates.display}. Keep watch on {EVENT.social.instagram.handle} for the announcement.
+                </p>
+              </>
+            )}
+
+            <div data-ink="" className="ps-divider" aria-hidden="true">
+              <span />✦<span />
+            </div>
 
             <div data-ink="" className="ps-count">
               <SubmissionCountdown variant="full" />
             </div>
-          </article>
-          <span className="ps-seal" aria-hidden="true">
-            CO5
-          </span>
-        </div>
+
+            <div data-ink="" className="ps-foot">
+              <p className="ps-sign">The crew of {EVENT.organizer.shortName}</p>
+              <span className="ps-seal" aria-hidden="true">
+                CO5
+              </span>
+            </div>
+          </div>
+        </article>
       </main>
 
       <footer className="ps-footer">
