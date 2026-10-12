@@ -273,7 +273,8 @@ body {
   --gap: calc(13.5vh + 3.2vw);
   position: relative;
   width: min(27rem, calc(50% - var(--gap) - 4vw));
-  margin-bottom: 30vh;
+  /* close together, alternating sides, so several milestones read at once */
+  margin-bottom: 3vh;
   color: #dceff9;
   will-change: opacity, filter;
 }
@@ -362,7 +363,7 @@ body {
     width: 60vw;
     margin-left: 6vw;
     margin-right: 0;
-    margin-bottom: 26vh;
+    margin-bottom: 5vh;
     text-align: left;
   }
   .log-item[data-side='l'] .log-tags {

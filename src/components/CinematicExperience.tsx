@@ -66,6 +66,27 @@ export function CinematicExperience({ onUnsupported }: Props) {
         pinSpacing: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
+        // the ship's log (voyage in numbers → join the crew) moves one block per scroll:
+        // when scrolling settles there, it carries on to the next block in that direction
+        snap: {
+          snapTo: (value: number) => {
+            const stops = director.deckStops();
+            if (!st || stops.length < 2 || value < stops[0] - 0.012 || value > stops[stops.length - 1]) return value;
+            // already resting on a block (e.g. after a navbar jump to Sponsors): stay there
+            const here = stops.find((s) => Math.abs(s - value) < 0.002);
+            if (here !== undefined) return here;
+            const next =
+              st.direction > 0
+                ? stops.find((s) => s > value + 1e-4)
+                : [...stops].reverse().find((s) => s < value - 1e-4);
+            return next ?? value;
+          },
+          directional: false,
+          delay: 0.04,
+          duration: { min: 0.25, max: 0.6 },
+          ease: 'power2.inOut',
+          inertia: false,
+        },
         onUpdate: (self) => {
           target = self.progress;
         },

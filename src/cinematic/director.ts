@@ -1,5 +1,5 @@
 import { asset } from '../data/asset';
-import { CHOREO as K, type Chapter, easeInOut, easeOut3, lerp, seg, smooth, sstep } from './choreography';
+import { CHOREO as K, type Chapter, at, bottleFilm, easeInOut, easeOut3, lerp, seg, smooth, sstep } from './choreography';
 
 const easeOutBack = (t: number) => {
   const c1 = 1.5;
@@ -51,7 +51,16 @@ const f3 = (v: number) => (Math.abs(v) < 1e-4 ? '0' : v.toFixed(3));
 const pad = (i: number) => String(i).padStart(4, '0');
 
 type Item = { el: HTMLElement; top: number; h: number; chapter?: Chapter };
-type Track = { items: Item[]; startY: number; endY: number; range: readonly [number, number] };
+type Track = {
+  items: Item[];
+  startY: number;
+  endY: number;
+  range: readonly [number, number];
+  /** scroll progress at which each item sits at the focus line */
+  stops: number[];
+  /** how far from the focus (in viewport heights) an item starts to dim, and is fully dim */
+  falloff: [number, number];
+};
 type Rect = [number, number, number, number];
 
 /**
@@ -135,8 +144,9 @@ export class Director {
   private H = 1;
   private aboutLines: HTMLElement[] = [];
   private inkLines: HTMLElement[] = [];
-  private log: Track = { items: [], startY: 0, endY: 0, range: K.log.track };
-  private deck: Track = { items: [], startY: 0, endY: 0, range: K.deck.track };
+  // the log is a timeline: neighbouring milestones stay readable together
+  private log: Track = { items: [], startY: 0, endY: 0, range: K.log.track, stops: [], falloff: [0.22, 0.75] };
+  private deck: Track = { items: [], startY: 0, endY: 0, range: K.deck.track, stops: [], falloff: [0.04, 0.42] };
   private chapterP: Record<Chapter, number> = { home: 0, about: 0.25, timeline: 0.36, sponsors: 0.9, register: 0.94 };
   private mobile: boolean;
   portrait = false;
@@ -240,12 +250,18 @@ export class Director {
     const last = t.items[t.items.length - 1];
     t.startY = this.H * 1.02;
     t.endY = last ? focus - (last.top + last.h / 2) : 0;
-    for (const it of t.items) {
-      if (!it.chapter) continue;
+    t.stops = t.items.map((it) => {
       const y = focus - (it.top + it.h / 2);
       const k = (t.startY - y) / Math.max(1, t.startY - t.endY);
-      this.chapterP[it.chapter] = lerp(t.range[0], t.range[1], Math.min(1, Math.max(0, k)));
-    }
+      const p = lerp(t.range[0], t.range[1], Math.min(1, Math.max(0, k)));
+      if (it.chapter) this.chapterP[it.chapter] = p;
+      return p;
+    });
+  }
+
+  /** where each block of the ship's log sits in focus, for scroll snapping */
+  deckStops() {
+    return this.deck.stops;
   }
 
   resize(w: number, h: number, dpr: number) {
@@ -328,7 +344,7 @@ export class Director {
       this.paperRect = rect;
       this.paperSet = bottle.size[0] < 800 ? 'm' : 'd';
       const fall = lerp(0, 1.32, seg(p, po0, po1));
-      bottle.draw(r, seg(p, ...K.bottle) * (bottle.n - 1), rect, sstep(j0, j1, p), fall > 0 ? { dissolve: fall, dissolveLook: [0.035, 0.12, 2.6] } : {});
+      bottle.draw(r, bottleFilm(p) * (bottle.n - 1), rect, sstep(j0, j1, p), fall > 0 ? { dissolve: fall, dissolveLook: [0.035, 0.12, 2.6] } : {});
     }
 
     // ------------------------------------- 06 · the CSI ship on that sea
@@ -357,16 +373,16 @@ export class Director {
     this.atmos.render({
       time: t,
       dust: 1 - sstep(d0, d1, p),
-      push: Math.pow(seg(p, 0.02, d1), 1.4) * 2.2,
+      push: Math.pow(seg(p, at(0.02), d1), 1.4) * 2.2,
       title: dissolve > 0 && dissolve < 1.32 ? { rect: tRect, dissolve } : null,
       paper: paperT > 0 && paperT < 1 ? lerp(0, 1.32, paperT) : 0,
     });
 
     // ------------------------------------------------- navbar contrast
     let glass: number;
-    if (p < 0.17) glass = 0.3;
-    else if (p < j1) glass = lerp(0.3, 0.14, seg(p, 0.17, 0.24));
-    else if (p < po0) glass = lerp(0.14, 0.46, sstep(0.42, 0.5, p));
+    if (p < at(0.17)) glass = 0.3;
+    else if (p < j1) glass = lerp(0.3, 0.14, seg(p, at(0.17), at(0.24)));
+    else if (p < po0) glass = lerp(0.14, 0.46, sstep(at(0.42), at(0.5), p));
     else glass = lerp(0.46, 0.36, sstep(po0, K.shipIn[1], p));
     document.documentElement.style.setProperty('--nav-glass', glass.toFixed(3));
 
@@ -385,7 +401,7 @@ export class Director {
     const { H } = this;
     for (const it of tr.items) {
       const cy = y + it.top + it.h / 2;
-      const f = 1 - sstep(0.04, 0.42, Math.abs(cy - focus) / H);
+      const f = 1 - sstep(tr.falloff[0], tr.falloff[1], Math.abs(cy - focus) / H);
       const edge = sstep(band[0], band[0] + H * 0.16, cy) * (1 - sstep(band[1] - H * 0.12, band[1], cy));
       css(it.el, 'opacity', f3((0.16 + 0.84 * f) * edge));
       css(it.el, '--focus', f3(f));
@@ -397,7 +413,7 @@ export class Director {
     const { H } = this;
 
     // the presenter line and dates frame the title, and leave with it
-    const lines = 1 - sstep(0.004, 0.035, p);
+    const lines = 1 - sstep(at(0.004), at(0.035), p);
     for (const [el, y, dir] of [
       [T.introEyebrow, tRect[1] - 6, -1],
       [T.introMeta, tRect[1] + tRect[3] + 10, 1],
@@ -407,7 +423,7 @@ export class Director {
       css(el, 'transform', `translate3d(-50%, ${f3(y + dir * (1 - lines) * 14)}px, 0) translateY(${dir < 0 ? '-100%' : '0'})`);
     }
     css(T.introScrim, 'opacity', f3(1 - sstep(0.004, 0.06, dissolve)));
-    css(T.hint, 'opacity', f3(1 - sstep(0.002, 0.016, p)));
+    css(T.hint, 'opacity', f3(1 - sstep(at(0.002), at(0.016), p)));
     // ---- about pops out of the dark, line by line, as the camera enters
     {
       const [a0, a1] = K.about.in;
