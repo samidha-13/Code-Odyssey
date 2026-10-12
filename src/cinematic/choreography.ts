@@ -19,9 +19,9 @@ export const CHOREO = {
   lift: [0.69, 0.76] as const, // the open sea settles below the camera
   shipIn: [0.725, 0.79] as const,
 
-  // about pops out line by line as the camera passes into the helmet, holds
+  // about pops out line by line once the camera is inside the helmet (film frame 86+), holds
   // through the deep, then drifts on before the bottle appears
-  about: { in: [0.148, 0.2] as const, out: [0.292, 0.318] as const },
+  about: { in: [0.193, 0.238] as const, out: [0.295, 0.32] as const },
   // ink appears on the fully unrolled paper (bottle film frames ~132-147)
   ink: [0.642, 0.676] as const,
   log: { header: [0.342, 0.36, 0.452, 0.472] as const, track: [0.346, 0.43] as const },
