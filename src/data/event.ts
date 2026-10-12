@@ -49,7 +49,7 @@ export const EVENT = {
     /** Set VITE_REGISTRATION_URL (see .env.example) to open registration. */
     url: REGISTRATION_CLOSED ? null : registrationUrl,
     status: (REGISTRATION_CLOSED ? 'closed' : 'open') as RegistrationStatus,
-    deadline: 'Saturday, 12:00 AM (midnight)',
+    deadline: 'Saturday, 10 October · 12:00 AM',
   },
 
   shortlist: {
@@ -61,7 +61,44 @@ export const EVENT = {
     title: 'Problem Statements',
     status: 'To be released soon',
     /** Add the statements here when they are released; the page lists them in order. */
-    statements: [] as { id: string; title: string; track?: string; summary: string }[],
+    theme: 'Driving Innovation to Support Youth in Need',
+    statements: [
+      {
+        id: 'social-pulse',
+        title: 'Social Pulse',
+        track: 'Challenge: Scattered audience insights',
+        summary:
+          'Audience conversations are spread across many platforms and tracked manually, so engagement opportunities get missed. Build a tool that monitors brand mentions, identifies trending topics and recommends relevant content for the comms team.',
+      },
+      {
+        id: 'content-catalyst',
+        title: 'Content Catalyst',
+        track: 'Challenge: Outdated course material',
+        summary:
+          'Industry practices evolve fast, and spotting outdated curriculum through manual feedback review is slow and inconsistent. Build a system that analyzes course content, ingests feedback, validates it against industry trends and recommends updates.',
+      },
+      {
+        id: 'smart-project-allocation',
+        title: 'Smart Project Allocation',
+        track: 'Challenge: Manual project assignment',
+        summary:
+          'Projects are assigned generically and submissions tracked by hand, which gets harder as student numbers grow. Build an AI solution that matches students to projects based on their profiles, with a unified dashboard to track submissions.',
+      },
+      {
+        id: 'partnership-management',
+        title: 'Partnership Management',
+        track: 'Challenge: Fragmented partner oversight',
+        summary:
+          'Partner data lives in scattered spreadsheets, causing missed reporting deadlines and heavy admin work. Build a consolidated partner view with AI alerts for upcoming deadlines and suggested follow-up actions.',
+      },
+      {
+        id: 'ai-idea-screening',
+        title: 'AI Idea Screening',
+        track: 'Challenge: Multi-format language barriers',
+        summary:
+          'Entrepreneur pitches arrive as audio, text and PDFs in multiple regional languages, making evaluation slow. Build a tool that ingests any format, auto-translates, scores viability and adds local market context for assessors.',
+      },
+    ] as { id: string; title: string; track?: string; summary: string }[],
     /** A page of its own, beside index.html (see vite.config.ts). */
     href: 'problem-statements.html',
     submission: {

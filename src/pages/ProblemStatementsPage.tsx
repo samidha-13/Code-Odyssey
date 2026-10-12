@@ -42,6 +42,11 @@ export function ProblemStatementsPage() {
               ✦
             </p>
 
+            {released && (
+              <p data-ink="" className="ps-soft">
+                {ps.theme}
+              </p>
+            )}
             {released ? (
               <ol data-ink="" className="ps-list">
                 {ps.statements.map((s, i) => (

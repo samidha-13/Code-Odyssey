@@ -1289,12 +1289,17 @@ body {
   max-width: 54rem;
   text-align: left;
 }
+/* the statements are inked straight onto the paper: a deep, heavy ink with a faint
+   pale halo, so the lettering stays clear over the paper's darker stains */
 .ps-item {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 1.25rem;
   padding: 1.6rem 0;
   border-top: 1px solid rgb(90 50 20 / 0.28);
+  text-shadow:
+    0 0 1px rgb(255 244 222 / 0.7),
+    0 0 14px rgb(255 238 205 / 0.45);
 }
 .ps-item:first-child {
   border-top: 0;
@@ -1303,15 +1308,15 @@ body {
   font-family: var(--font-display);
   font-size: 1.6rem;
   line-height: 1.1;
-  color: #7a4a20;
+  color: #5a3210;
   font-variant-numeric: tabular-nums;
 }
 .ps-track {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #6b3f1a;
+  color: #5a3210;
 }
 .ps-item-title {
   margin-top: 0.3rem;
@@ -1319,15 +1324,16 @@ body {
   font-weight: 600;
   font-size: clamp(1.3rem, 2.4vw, 1.8rem);
   line-height: 1.15;
+  color: #22120a;
   text-wrap: balance;
 }
 .ps-item-body {
   margin-top: 0.6rem;
   font-family: var(--font-serif);
-  font-size: clamp(1.1rem, 1.6vw, 1.3rem);
-  font-weight: 500;
+  font-size: clamp(1.15rem, 1.7vw, 1.35rem);
+  font-weight: 600;
   line-height: 1.55;
-  color: #43260f;
+  color: #2a1608;
   text-wrap: pretty;
 }
 .ps-divider {
