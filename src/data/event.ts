@@ -57,6 +57,19 @@ export const EVENT = {
     status: 'Onboarding teams — to be announced soon',
   },
 
+  problemStatements: {
+    title: 'Problem Statements',
+    status: 'To be released soon',
+    /** A page of its own, beside index.html (see vite.config.ts). */
+    href: 'problem-statements.html',
+    submission: {
+      deadlineISO: '2026-10-13T23:59:00+05:30',
+      display: 'Tuesday, 13 October 2026 · 11:59 PM IST',
+      /** when the hourglass was turned; the sand drains from here to the deadline */
+      openedISO: '2026-10-11T00:00:00+05:30',
+    },
+  },
+
   social: {
     instagram: { handle: '@csi_kjsit', url: 'https://www.instagram.com/csi_kjsit/' },
   },

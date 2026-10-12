@@ -17,6 +17,11 @@ export default defineConfig(({ mode }) => {
   return {
     base: './',
     plugins: [react(), tailwindcss(), siteUrl(env.VITE_SITE_URL ?? '')],
-    build: { target: 'es2020', assetsInlineLimit: 0 },
+    build: {
+      target: 'es2020',
+      assetsInlineLimit: 0,
+      // two pages: the voyage, and the problem statements beside it
+      rolldownOptions: { input: { main: 'index.html', ps: 'problem-statements.html' } },
+    },
   };
 });

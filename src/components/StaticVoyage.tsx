@@ -1,5 +1,7 @@
 import { asset } from '../data/asset';
 import { EVENT } from '../data/event';
+import { ProblemStatementsButton } from './ProblemStatementsButton';
+import { SubmissionCountdown } from './SubmissionCountdown';
 
 /**
  * Motion-free opening, used when the visitor prefers reduced motion or WebGL
@@ -26,6 +28,10 @@ export function StaticVoyage() {
           <p className="intro-line intro-meta !static !translate-none">
             {EVENT.dates.display} · {EVENT.format}
           </p>
+        </div>
+        <div className="ps-cta intro-cta">
+          <SubmissionCountdown variant="compact" />
+          <ProblemStatementsButton />
         </div>
       </figure>
     </section>

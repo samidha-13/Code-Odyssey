@@ -1,5 +1,7 @@
 import type { TextRefs } from '../cinematic/director';
+import { ProblemStatementsButton } from '../components/ProblemStatementsButton';
 import { RegisterButton } from '../components/RegisterButton';
+import { SubmissionCountdown } from '../components/SubmissionCountdown';
 import { EVENT } from '../data/event';
 
 type Props = { refFn: (k: keyof TextRefs) => (node: HTMLElement | null) => void };
@@ -27,6 +29,10 @@ export function AboutDeep({ refFn }: Props) {
           </p>
           <div data-line="" className="deep-cta">
             <RegisterButton />
+            <div className="ps-cta">
+              <SubmissionCountdown variant="compact" />
+              <ProblemStatementsButton />
+            </div>
           </div>
         </div>
       </div>

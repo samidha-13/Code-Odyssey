@@ -113,6 +113,11 @@ export function Navbar() {
                 </a>
               </li>
             ))}
+            <li>
+              <a href={asset(EVENT.problemStatements.href)} className="nav-link nav-link--page">
+                {EVENT.problemStatements.title}
+              </a>
+            </li>
           </ul>
 
           <button
@@ -161,6 +166,19 @@ export function Navbar() {
               </a>
             </li>
           ))}
+          <li
+            className="transition-all duration-500"
+            style={{ transitionDelay: open ? `${80 + NAV_ITEMS.length * 60}ms` : '0ms', transform: open ? 'none' : 'translateY(12px)', opacity: open ? 1 : 0 }}
+          >
+            <a
+              href={asset(EVENT.problemStatements.href)}
+              tabIndex={open ? 0 : -1}
+              className="flex items-baseline gap-5 border-b border-ivory/10 py-4"
+            >
+              <span className="font-serif text-sm italic text-bronze-light">0{NAV_ITEMS.length + 1}</span>
+              <span className="font-display text-3xl tracking-[0.12em] text-ivory/70">{EVENT.problemStatements.title}</span>
+            </a>
+          </li>
         </ul>
       </div>
     </header>

@@ -408,7 +408,6 @@ export class Director {
     }
     css(T.introScrim, 'opacity', f3(1 - sstep(0.004, 0.06, dissolve)));
     css(T.hint, 'opacity', f3(1 - sstep(0.002, 0.016, p)));
-
     // ---- about pops out of the dark, line by line, as the camera enters
     {
       const [a0, a1] = K.about.in;
