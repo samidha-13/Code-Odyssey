@@ -23,6 +23,11 @@
     <meta name="twitter:title" content="Code Odyssey 5.0 — An Epic Odyssey" />
     <meta name="twitter:image" content="%VITE_SITE_URL%/og-image.jpg" />
 
+    <!-- the opening view, fetched alongside the scripts instead of after them
+         (the breakpoint matches the director's desktop/portrait frame sets) -->
+    <link rel="preload" as="image" href="./assets/frames/hero/d/0001.webp" media="(min-width: 768px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="./assets/frames/hero/m/0001.webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="./assets/title/code-odyssey-title.webp" fetchpriority="high" />
   </head>
   <body>
     <div id="root"></div>

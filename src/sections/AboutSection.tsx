@@ -148,7 +148,7 @@ export function AboutSection() {
           </div>
           <div className="relative mt-10">
           <img
-            src={asset('assets/helmet/helmet-isolated.png')}
+            src={asset('assets/helmet/helmet-isolated.webp')}
             alt=""
             aria-hidden="true"
             loading="lazy"

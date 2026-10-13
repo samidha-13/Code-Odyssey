@@ -44,12 +44,14 @@ export function CinematicExperience({ onUnsupported }: Props) {
     let raf = 0;
     let last = performance.now();
     const t0 = last;
+    let drawnAt = -1;
 
     const size = () => {
       const w = el.clientWidth;
       const h = el.clientHeight;
       const before = director.lengthScale();
-      director.resize(w, h, Math.min(window.devicePixelRatio || 1, mobile ? 2 : 1.5));
+      // the films are 720px tall: a denser canvas than 1.5x only costs GPU time on phones
+      director.resize(w, h, Math.min(window.devicePixelRatio || 1, 1.5));
       // the log's height (fonts, rotation) sets how much scroll it gets: re-measure the pin
       if (st && Math.abs(director.lengthScale() - before) > 0.01) ScrollTrigger.refresh();
     };
@@ -121,6 +123,9 @@ export function CinematicExperience({ onUnsupported }: Props) {
       // critically-damped follow: a touch of inertia on the camera
       const diff = target - current;
       current = Math.abs(diff) < 1e-5 ? target : current + diff * (1 - Math.exp(-dt * 7));
+      // draw only when something changed: at rest on a still scene the GPU stays idle
+      if (current === drawnAt && !director.wantsFrame()) return;
+      drawnAt = current;
       director.frame(director.timeAt(current), (now - t0) / 1000);
     };
     raf = requestAnimationFrame(tick);

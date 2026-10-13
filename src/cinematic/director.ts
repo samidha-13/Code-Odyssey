@@ -24,6 +24,8 @@ const FILMS = { hero: { frames: 300 }, bottle: { frames: 150 } } as const;
 const POSTER_FADE = 8;
 /** share of each frame's scroll spent blending into the next; the rest shows one sharp frame */
 const BLEND = 0.5;
+/** films load every COARSE-th frame first, then the rest */
+const COARSE = 4;
 /** below this many film frames per animation frame, the scroll counts as at rest */
 const SETTLE_SPEED = 0.01;
 type FilmKey = keyof typeof FILMS;
@@ -131,6 +133,10 @@ class Film {
     if (Math.abs(k - this.shown) < 0.01) this.shown = k;
     return this.shown;
   }
+  /** still easing onto a whole frame, so it needs drawing again even if the scroll is still */
+  get settling() {
+    return this.lastF >= 0 && this.shown !== Math.round(this.lastF);
+  }
   draw(r: Renderer, scrolled: number, rect: Rect, opacity: number, extra: Partial<Parameters<Renderer['draw']>[1]> = {}) {
     const f = this.settle(scrolled);
     if (opacity <= 0.002) return;
@@ -179,6 +185,11 @@ export class Director {
   private paperSet: 'd' | 'm' = 'd';
   /** the hero film's first frame, held on its own texture to fade out of */
   private poster: Tex | null = null;
+  /** something new arrived (an image, a resize) since the last frame was drawn */
+  private dirty = true;
+  /** the last frame had something moving on its own (the sea, a film settling) */
+  private busy = false;
+  private navGlass = '';
   /** a stretch of the timeline [a, b] given f times its scroll (the log on a phone) */
   private slow = { a: K.log.track[0], b: K.log.track[1], f: 1 };
 
@@ -203,7 +214,10 @@ export class Director {
     const filmFrames = this.films.hero.n + this.films.bottle.n;
     const total = Object.keys(SCENE_ASSETS).length + filmFrames;
     let done = 0;
-    const tick = () => onProgress(++done / total);
+    const tick = () => {
+      this.dirty = true; // a nearer frame may now be available for the current position
+      onProgress(++done / total);
+    };
     const img = (src: string) =>
       new Promise<HTMLImageElement | null>((resolve) => {
         const im = new Image();
@@ -251,9 +265,21 @@ export class Director {
     tick();
     await still('title');
     onCritical();
-    await film(hero, hero.order().filter((i) => i !== 0));
-    await film(this.films.bottle);
+    // every 4th frame of both films and the sea first, so the whole journey can be
+    // scrolled early on; then the frames in between
+    const bottle = this.films.bottle;
+    const coarse = (f: Film) => f.order().filter((i) => i % COARSE === 0);
+    const fine = (f: Film) => f.order().filter((i) => i % COARSE !== 0);
+    await film(hero, coarse(hero).filter((i) => i !== 0));
+    await film(bottle, coarse(bottle));
     await Promise.all([still('sea'), still('ship')]);
+    await film(hero, fine(hero));
+    await film(bottle, fine(bottle));
+  }
+
+  /** whether the scene needs drawing again although the scroll hasn't moved */
+  wantsFrame() {
+    return this.dirty || this.busy;
   }
 
   chapters() {
@@ -341,6 +367,7 @@ export class Director {
     this.measureTrack(this.texts.logTrack, this.log, this.logFocus());
     this.measureTrack(this.texts.deckTrack, this.deck, this.deckFocus());
     this.fitLog();
+    this.dirty = true;
   }
 
   private cover(iw: number, ih: number, zoom = 1): Rect {
@@ -363,6 +390,7 @@ export class Director {
   /** Render one frame at scroll progress p (0..1) and wall time t (s). */
   frame(p: number, t: number) {
     const { W, H, r, tex, films } = this;
+    this.dirty = false;
     r.time = t;
     r.begin(0.004, 0.016, 0.032);
 
@@ -454,9 +482,15 @@ export class Director {
     else if (p < j1) glass = lerp(0.3, 0.14, seg(p, at(0.17), at(0.24)));
     else if (p < po0) glass = lerp(0.14, 0.46, sstep(at(0.42), at(0.5), p));
     else glass = lerp(0.46, 0.36, sstep(po0, K.shipIn[1], p));
-    document.documentElement.style.setProperty('--nav-glass', glass.toFixed(3));
+    // only when it changes: a style write on the root restyles the whole page
+    const g = glass.toFixed(3);
+    if (g !== this.navGlass) document.documentElement.style.setProperty('--nav-glass', (this.navGlass = g));
 
     this.text(p, tRect);
+
+    // the sea and the ship move on their own; the films may still be settling
+    const heroOn = p < j1 + 0.005;
+    this.busy = (!!SEA && p > po0) || (heroOn && hero.settling) || (p > j0 && bottle.settling);
   }
 
   // ------------------------------------------------------------- text

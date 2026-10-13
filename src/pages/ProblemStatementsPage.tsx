@@ -3,11 +3,11 @@ import { asset } from '../data/asset';
 import { EVENT } from '../data/event';
 
 /**
- * A torn page with no ends (public/Problemstatements_background-removebg-preview.png),
- * stacked with its mirror image into ps-paper-tile.png so it repeats without a
+ * A torn page with no ends (design/source-assets/paper/Problemstatements_background-removebg-preview.png),
+ * stacked with its mirror image into ps-paper-tile.webp so it repeats without a
  * seam and grows as long as the text on it.
  */
-const PAPER = 'assets/textures/ps-paper-tile.png';
+const PAPER = 'assets/textures/ps-paper-tile.webp';
 
 /**
  * The problem statements, in ink on a long sheet of old paper, in the same

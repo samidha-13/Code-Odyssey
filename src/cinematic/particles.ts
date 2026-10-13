@@ -31,6 +31,8 @@ export class Particles {
   private sprite: HTMLCanvasElement;
   private w = 1;
   private h = 1;
+  /** whether the canvas holds anything from the last render */
+  private drew = false;
 
   constructor(private canvas: HTMLCanvasElement, count: number) {
     this.ctx = canvas.getContext('2d')!;
@@ -91,10 +93,17 @@ export class Particles {
     this.canvas.width = Math.round(w * dpr);
     this.canvas.height = Math.round(h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.drew = false; // resizing a canvas clears it
   }
 
   render(st: AtmosState) {
     const { ctx, w, h } = this;
+    const T0 = st.title;
+    const any =
+      (this.motes.length > 0 && (st.dust > 0.01 || st.paper > 0)) || (!!T0 && T0.dissolve > 0 && this.grains.length > 0);
+    // an empty layer that was already cleared needs no work at all
+    if (!any && !this.drew) return;
+    this.drew = any;
     ctx.clearRect(0, 0, w, h);
 
     if (st.dust > 0.01) {
