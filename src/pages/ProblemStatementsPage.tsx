@@ -80,6 +80,18 @@ export function ProblemStatementsPage() {
               <SubmissionCountdown variant="full" />
             </div>
 
+            {released && (
+              <div data-ink="" className="ps-submit">
+                <a className="btn-voyage" href={ps.submission.formUrl} target="_blank" rel="noopener noreferrer">
+                  Submit Round 1
+                  <svg className="arrow" width="18" height="10" viewBox="0 0 18 10" fill="none" aria-hidden="true">
+                    <path d="M0 5h16M12 1l4 4-4 4" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </a>
+                <p className="ps-policy">{ps.submission.policy}</p>
+              </div>
+            )}
+
             <div data-ink="" className="ps-foot">
               <p className="ps-sign">The crew of {EVENT.organizer.shortName}</p>
               <span className="ps-seal" aria-hidden="true">

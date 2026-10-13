@@ -71,11 +71,13 @@ export function Navbar() {
   };
 
   const org = EVENT.organizer;
-  const markInner = org.logo ? (
-    <img src={asset(org.logo)} alt="CSI KJSIT" className="h-8 w-auto" />
-  ) : (
+  const markInner = (
     <>
-      <Astrolabe className="h-8 w-8 text-bronze-light transition-transform duration-700 group-hover:rotate-45" />
+      {org.logo ? (
+        <img src={asset(org.logo)} alt="" width={40} height={40} className="h-10 w-10" />
+      ) : (
+        <Astrolabe className="h-8 w-8 text-bronze-light transition-transform duration-700 group-hover:rotate-45" />
+      )}
       <span className="flex flex-col leading-none">
         <span className="font-display text-[0.95rem] font-semibold tracking-[0.2em] text-ivory">CSI</span>
         <span className="mt-1 text-[0.56rem] font-semibold tracking-[0.42em] text-ivory/70">KJSIT</span>

@@ -22,7 +22,7 @@ export const EVENT = {
     institute: 'K. J. Somaiya Institute of Technology (KJSIT)',
     shortName: 'CSI KJSIT',
     /** Path inside /public, e.g. 'assets/logos/csi-kjsit-logo.png'. null → typographic mark. */
-    logo: null as string | null,
+    logo: 'assets/logos/csi-kjsit-logo.png' as string | null,
     /** Where the navbar mark links. null → top of this page. */
     url: null as string | null,
   },
@@ -102,10 +102,14 @@ export const EVENT = {
     /** A page of its own, beside index.html (see vite.config.ts). */
     href: 'problem-statements.html',
     submission: {
-      deadlineISO: '2026-10-13T23:59:00+05:30',
-      display: 'Tuesday, 13 October 2026 · 11:59 PM IST',
+      deadlineISO: '2026-10-14T09:00:00+05:30',
+      display: 'Wednesday, 14 October 2026 · 9:00 AM IST',
       /** when the hourglass was turned; the sand drains from here to the deadline */
       openedISO: '2026-10-11T00:00:00+05:30',
+      /** Round 1 deliverables go in here */
+      formUrl:
+        'https://docs.google.com/forms/d/e/1FAIpQLSeDwcVxfKwFgRzELa3El0YmpRWvxfmlnoxK_lkJzwqDXTju2Q/viewform?usp=preview',
+      policy: 'Any form of plagiarism or AI-generated content will lead to immediate disqualification of the team.',
     },
   },
 

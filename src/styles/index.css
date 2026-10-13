@@ -199,14 +199,6 @@ body {
 }
 
 /* ---- 01 Â· the title over the sand ---- */
-.intro-scrim {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(60% 40% at 50% 34%, rgb(30 12 2 / 0.32), transparent 100%),
-    linear-gradient(180deg, rgb(10 6 10 / 0.28), transparent 100%);
-}
 .intro-line {
   position: absolute;
   left: 50%;
@@ -1368,6 +1360,21 @@ body {
 .ps-sheet .countdown--full .countdown-deadline {
   font-weight: 600;
   color: #3b2412;
+}
+.ps-submit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2.4rem;
+}
+.ps-policy {
+  max-width: 30rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #7a2a12;
 }
 .ps-foot {
   display: flex;

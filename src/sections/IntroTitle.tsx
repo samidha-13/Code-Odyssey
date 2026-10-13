@@ -10,7 +10,6 @@ type Props = { refFn: (k: keyof TextRefs) => (node: HTMLElement | null) => void 
 export function IntroTitle({ refFn }: Props) {
   return (
     <>
-      <div ref={refFn('introScrim')} className="intro-scrim" aria-hidden="true" />
       <h1 className="sr-only">
         {EVENT.name} — {EVENT.format} by {EVENT.organizer.shortName}, {EVENT.dates.display}. Powered by TATA STRIVE.
       </h1>

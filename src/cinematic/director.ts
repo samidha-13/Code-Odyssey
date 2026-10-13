@@ -26,7 +26,6 @@ const NAV_CLEARANCE = 84; // px: the CSI flag always sits below the fixed navbar
 export type TextKey =
   | 'introEyebrow'
   | 'introMeta'
-  | 'introScrim'
   | 'hint'
   | 'aboutTrack'
   | 'aboutScrim'
@@ -152,6 +151,8 @@ export class Director {
   portrait = false;
   private paperRect: Rect = [0, 0, 1, 1];
   private paperSet: 'd' | 'm' = 'd';
+  /** a stretch of the timeline [a, b] given f times its scroll (the log on a phone) */
+  private slow = { a: K.log.track[0], b: K.log.track[1], f: 1 };
 
   constructor(
     renderer: Renderer,
@@ -264,6 +265,35 @@ export class Director {
     return this.deck.stops;
   }
 
+  /**
+   * On a phone the log is one tall column read in the top of the screen, so it
+   * would race past on its share of the scroll. Its stretch of the timeline gets
+   * extra scroll until the text moves no faster than LOG_RATE px per px scrolled.
+   */
+  private fitLog() {
+    const LOG_RATE = 0.6;
+    const { a, b } = this.slow;
+    const scroll = (b - a) * K.lengthVh.mobile * this.H;
+    const travel = this.log.startY - this.log.endY;
+    this.slow.f = this.portrait && scroll > 0 ? Math.max(1, travel / (LOG_RATE * scroll)) : 1;
+  }
+  /** how much longer the pinned scroll is than the timeline it plays */
+  lengthScale() {
+    const { a, b, f } = this.slow;
+    return 1 + (b - a) * (f - 1);
+  }
+  /** scroll progress (0..1) → position on the timeline */
+  timeAt(s: number) {
+    const { a, b, f } = this.slow;
+    const q = s * this.lengthScale();
+    return q <= a ? q : q < a + (b - a) * f ? a + (q - a) / f : q - (b - a) * (f - 1);
+  }
+  /** position on the timeline → scroll progress (0..1), the inverse of timeAt */
+  scrollAt(p: number) {
+    const { a, b, f } = this.slow;
+    return (p <= a ? p : p < b ? a + (p - a) * f : p + (b - a) * (f - 1)) / this.lengthScale();
+  }
+
   resize(w: number, h: number, dpr: number) {
     this.W = w;
     this.H = h;
@@ -275,6 +305,7 @@ export class Director {
     this.chapterP.about = K.about.in[1] + 0.02; // fully revealed
     this.measureTrack(this.texts.logTrack, this.log, this.logFocus());
     this.measureTrack(this.texts.deckTrack, this.deck, this.deckFocus());
+    this.fitLog();
   }
 
   private cover(iw: number, ih: number, zoom = 1): Rect {
@@ -386,7 +417,7 @@ export class Director {
     else glass = lerp(0.46, 0.36, sstep(po0, K.shipIn[1], p));
     document.documentElement.style.setProperty('--nav-glass', glass.toFixed(3));
 
-    this.text(p, tRect, dissolve);
+    this.text(p, tRect);
   }
 
   // ------------------------------------------------------------- text
@@ -408,7 +439,7 @@ export class Director {
     }
   }
 
-  private text(p: number, tRect: Rect, dissolve: number) {
+  private text(p: number, tRect: Rect) {
     const T = this.texts;
     const { H } = this;
 
@@ -422,7 +453,6 @@ export class Director {
       css(el, 'visibility', lines > 0.001 ? 'visible' : 'hidden');
       css(el, 'transform', `translate3d(-50%, ${f3(y + dir * (1 - lines) * 14)}px, 0) translateY(${dir < 0 ? '-100%' : '0'})`);
     }
-    css(T.introScrim, 'opacity', f3(1 - sstep(0.004, 0.06, dissolve)));
     css(T.hint, 'opacity', f3(1 - sstep(at(0.002), at(0.016), p)));
     // ---- about pops out of the dark, line by line, as the camera enters
     {

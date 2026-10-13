@@ -21,7 +21,6 @@ export function StaticVoyage() {
           className="absolute inset-0 h-full w-full object-cover"
           fetchPriority="high"
         />
-        <div className="intro-scrim" aria-hidden="true" />
         <div className="relative -mt-[18vh] flex w-[min(92vw,80rem)] flex-col items-center gap-5 text-center" aria-hidden="true">
           <p className="intro-line !static !translate-none">Computer Society of India · KJSIT presents</p>
           <img src={asset('assets/title/code-odyssey-title.webp')} alt="" className="w-full drop-shadow-[0_10px_30px_rgb(40_15_0/0.6)]" />

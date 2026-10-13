@@ -48,13 +48,17 @@ export function CinematicExperience({ onUnsupported }: Props) {
     const size = () => {
       const w = el.clientWidth;
       const h = el.clientHeight;
+      const before = director.lengthScale();
       director.resize(w, h, Math.min(window.devicePixelRatio || 1, mobile ? 2 : 1.5));
+      // the log's height (fonts, rotation) sets how much scroll it gets: re-measure the pin
+      if (st && Math.abs(director.lengthScale() - before) > 0.01) ScrollTrigger.refresh();
     };
     size();
 
+    // scroll progress and the timeline differ only where the log is given extra scroll
     const length = () => {
       const vh = director.portrait ? CHOREO.lengthVh.mobile : CHOREO.lengthVh.desktop;
-      return Math.round(window.innerHeight * vh);
+      return Math.round(window.innerHeight * vh * director.lengthScale());
     };
 
     const ctx = gsap.context(() => {
@@ -71,15 +75,16 @@ export function CinematicExperience({ onUnsupported }: Props) {
         snap: {
           snapTo: (value: number) => {
             const stops = director.deckStops();
-            if (!st || stops.length < 2 || value < stops[0] - 0.012 || value > stops[stops.length - 1]) return value;
+            const p = director.timeAt(value);
+            if (!st || stops.length < 2 || p < stops[0] - 0.012 || p > stops[stops.length - 1]) return value;
             // already resting on a block (e.g. after a navbar jump to Sponsors): stay there
-            const here = stops.find((s) => Math.abs(s - value) < 0.002);
-            if (here !== undefined) return here;
+            const here = stops.find((s) => Math.abs(s - p) < 0.002);
+            if (here !== undefined) return director.scrollAt(here);
             const next =
               st.direction > 0
-                ? stops.find((s) => s > value + 1e-4)
-                : [...stops].reverse().find((s) => s < value - 1e-4);
-            return next ?? value;
+                ? stops.find((s) => s > p + 1e-4)
+                : [...stops].reverse().find((s) => s < p - 1e-4);
+            return next === undefined ? value : director.scrollAt(next);
           },
           directional: false,
           delay: 0.04,
@@ -102,9 +107,9 @@ export function CinematicExperience({ onUnsupported }: Props) {
       scrollFor: (c) => {
         if (!st) return 0;
         if (c === 'home') return 0;
-        return st.start + director.chapters()[c] * (st.end - st.start);
+        return st.start + director.scrollAt(director.chapters()[c]) * (st.end - st.start);
       },
-      current: () => director.chapterAt(st ? st.progress : 0),
+      current: () => director.chapterAt(director.timeAt(st ? st.progress : 0)),
     });
 
     const tick = (now: number) => {
@@ -116,7 +121,7 @@ export function CinematicExperience({ onUnsupported }: Props) {
       // critically-damped follow: a touch of inertia on the camera
       const diff = target - current;
       current = Math.abs(diff) < 1e-5 ? target : current + diff * (1 - Math.exp(-dt * 7));
-      director.frame(current, (now - t0) / 1000);
+      director.frame(director.timeAt(current), (now - t0) / 1000);
     };
     raf = requestAnimationFrame(tick);
 
