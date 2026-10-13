@@ -44,7 +44,7 @@ export const CHOREO = {
   lift: span(0.72, 0.785), // the open sea settles below the camera
   shipIn: span(0.75, 0.81),
 
-  // about pops out line by line once the camera is inside the helmet (film frame 86+), holds
+  // about pops out line by line once the camera is inside the helmet (hero film frame 172+ of 300), holds
   // through the deep, then drifts on before the bottle appears
   about: { in: span(0.193, 0.238), out: span(0.308, 0.33) },
   // ink appears on the fully unrolled paper (bottle film frames ~132-147)

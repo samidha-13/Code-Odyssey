@@ -1,5 +1,5 @@
 import { asset } from '../data/asset';
-import { CHOREO as K, type Chapter, at, bottleFilm, easeInOut, easeOut3, lerp, seg, smooth, sstep } from './choreography';
+import { CHOREO as K, type Chapter, at, bottleFilm, clamp01, easeInOut, easeOut3, lerp, seg, smooth, sstep } from './choreography';
 
 const easeOutBack = (t: number) => {
   const c1 = 1.5;
@@ -18,7 +18,14 @@ export const SCENE_ASSETS = {
 type SceneKey = keyof typeof SCENE_ASSETS;
 
 /** scroll-scrubbed films, extracted by scripts/extract_frames.sh */
-const FILMS = { hero: { frames: 150 }, bottle: { frames: 150 } } as const;
+// hero: every frame of the video, so the fast zoom into the helmet moves in small steps
+const FILMS = { hero: { frames: 300 }, bottle: { frames: 150 } } as const;
+/** hero film frames over which the opening still fades into the film */
+const POSTER_FADE = 8;
+/** share of each frame's scroll spent blending into the next; the rest shows one sharp frame */
+const BLEND = 0.5;
+/** below this many film frames per animation frame, the scroll counts as at rest */
+const SETTLE_SPEED = 0.01;
 type FilmKey = keyof typeof FILMS;
 
 const NAV_CLEARANCE = 84; // px: the CSI flag always sits below the fixed navbar
@@ -107,11 +114,30 @@ class Film {
     const im = this.imgs.find(Boolean);
     return im ? [im.naturalWidth, im.naturalHeight] : [16, 9];
   }
-  draw(r: Renderer, f: number, rect: Rect, opacity: number, extra: Partial<Parameters<Renderer['draw']>[1]> = {}) {
+  /** Where the scroll put the film, and the position actually shown. */
+  private lastF = -1;
+  private shown = 0;
+  /**
+   * While scrolling, neighbouring frames are cross-faded so motion stays smooth.
+   * Once the scroll comes to rest the film eases onto the nearest whole frame:
+   * a paused view is always one sharp frame, never two laid over each other.
+   */
+  private settle(f: number) {
+    const moving = Math.abs(f - this.lastF) > SETTLE_SPEED;
+    this.lastF = f;
+    if (moving) return (this.shown = f);
+    const k = Math.round(f);
+    this.shown += (k - this.shown) * 0.25;
+    if (Math.abs(k - this.shown) < 0.01) this.shown = k;
+    return this.shown;
+  }
+  draw(r: Renderer, scrolled: number, rect: Rect, opacity: number, extra: Partial<Parameters<Renderer['draw']>[1]> = {}) {
+    const f = this.settle(scrolled);
     if (opacity <= 0.002) return;
     const i0 = Math.max(0, Math.min(this.n - 1, Math.floor(f)));
     const i1 = Math.min(this.n - 1, i0 + 1);
-    const t = f - i0;
+    // hold each frame, then blend into the next over the middle of the step only
+    const t = smooth(clamp01((f - i0 - (1 - BLEND) / 2) / BLEND));
     const ja = this.nearest(i0);
     if (ja < 0) return;
     const jb = this.imgs[i1] ? i1 : ja;
@@ -151,6 +177,8 @@ export class Director {
   portrait = false;
   private paperRect: Rect = [0, 0, 1, 1];
   private paperSet: 'd' | 'm' = 'd';
+  /** the hero film's first frame, held on its own texture to fade out of */
+  private poster: Tex | null = null;
   /** a stretch of the timeline [a, b] given f times its scroll (the log on a phone) */
   private slow = { a: K.log.track[0], b: K.log.track[1], f: 1 };
 
@@ -213,6 +241,13 @@ export class Director {
 
     const hero = this.films.hero;
     hero.imgs[0] = await img(hero.url(0));
+    if (hero.imgs[0]) {
+      try {
+        this.poster = this.r.upload(hero.imgs[0]);
+      } catch {
+        /* the film's own first frame stands in */
+      }
+    }
     tick();
     await still('title');
     onCritical();
@@ -335,7 +370,11 @@ export class Director {
     const hero = films.hero;
     const heroRect = this.cover(...hero.size);
     const [j0, j1] = K.join;
-    if (p < j1 + 0.005) hero.draw(r, seg(p, ...K.hero) * (hero.n - 1), heroRect, 1);
+    const heroF = seg(p, ...K.hero) * (hero.n - 1);
+    if (p < j1 + 0.005) hero.draw(r, heroF, heroRect, 1);
+    // the opening still is sharper than the film it starts: melt it into the film over a
+    // few frames, before the camera has moved far enough to show a double image
+    if (this.poster && heroF < POSTER_FADE) r.draw(this.poster, { rect: heroRect, opacity: 1 - smooth(heroF / POSTER_FADE) });
 
     // ------------------------------- 03 · the message in a bottle (film)
     const bottle = films.bottle;
