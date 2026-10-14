@@ -32,8 +32,8 @@ export const TIMELINE: Milestone[] = [
     id: 'shortlist',
     title: 'Shortlisted Teams Announced',
     when: 'Wednesday night, 14 October',
-    confirmed: false,
-    note: 'Onboarding teams — to be announced soon',
+    confirmed: true,
+    note: '15 teams shortlisted',
     detail: 'Announced on the official website and on Instagram @csi_kjsit.',
   },
   {

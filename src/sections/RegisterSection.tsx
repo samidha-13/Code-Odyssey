@@ -64,9 +64,17 @@ export function RegisterSection() {
 
         <div className="mt-12 w-full max-w-2xl px-1 text-center" data-reveal="drift">
           <p className="text-[0.62rem] font-semibold uppercase tracking-[0.34em] text-bronze-light">{EVENT.shortlist.title}</p>
-          <p className="mt-3 font-display text-[clamp(1.15rem,3.6vw,1.9rem)] uppercase leading-tight tracking-[0.05em] text-ivory [overflow-wrap:anywhere]">
-            {EVENT.shortlist.status}
-          </p>
+          <div className="mt-6 grid grid-cols-1 gap-2.5 text-left sm:grid-cols-2">
+            {EVENT.shortlist.teams.map((team, i) => (
+              <div
+                key={team}
+                className="flex items-center gap-3 rounded-md border border-ivory/15 bg-ivory/[0.03] px-3.5 py-2.5 backdrop-blur-sm"
+              >
+                <span className="font-mono text-xs text-bronze-light">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-display text-sm uppercase tracking-wider text-ivory">{team}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <p className="mt-8 text-sm text-ivory/70" data-reveal="drift">

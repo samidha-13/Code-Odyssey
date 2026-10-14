@@ -54,7 +54,24 @@ export const EVENT = {
 
   shortlist: {
     title: 'Shortlisted Teams',
-    status: 'Onboarding teams — to be announced soon',
+    status: '15 Teams Shortlisted',
+    teams: [
+      'Epoch zero',
+      'Oasis',
+      '3 Girls and 1 Bug',
+      'Apex',
+      'Hackie Chan',
+      'Reboot',
+      'The Turing Mirage',
+      'Proxima Brains',
+      'Spacebar',
+      'FWB',
+      'Fast and Curious',
+      'Techhives',
+      'Git Push & Pray',
+      'Gryffindor',
+      'Magicians',
+    ],
   },
 
   problemStatements: {
