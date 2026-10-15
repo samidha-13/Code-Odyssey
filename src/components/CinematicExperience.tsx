@@ -63,6 +63,27 @@ export function CinematicExperience({ onUnsupported }: Props) {
       return Math.round(window.innerHeight * vh * director.lengthScale());
     };
 
+    // On a phone, every milestone, the paper and each block of the ship's log is a native
+    // scroll-snap point with `scroll-snap-stop: always`: the browser's own scrolling, fling
+    // and all, comes to rest on each one in turn instead of skipping past. The markers are
+    // empty elements placed at those scroll positions (the helmet before them stays free).
+    const marks: HTMLElement[] = [];
+    const placeSnaps = (t: ScrollTrigger) => {
+      for (const m of marks) m.remove();
+      marks.length = 0;
+      const on = director.portrait;
+      document.documentElement.classList.toggle('voyage-snap', on);
+      if (!on) return;
+      for (const s of director.snapStops()) {
+        const m = document.createElement('div');
+        m.className = 'snap-mark';
+        m.setAttribute('aria-hidden', 'true');
+        m.style.top = `${Math.round(t.start + director.scrollAt(s) * (t.end - t.start))}px`;
+        document.body.appendChild(m);
+        marks.push(m);
+      }
+    };
+
     const ctx = gsap.context(() => {
       st = ScrollTrigger.create({
         trigger: el,
@@ -72,11 +93,12 @@ export function CinematicExperience({ onUnsupported }: Props) {
         pinSpacing: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
-        // past the helmet, the voyage moves one block per scroll (on a phone: each milestone,
-        // the paper, each block of the ship's log; on a wide screen: the ship's log only).
-        // When scrolling settles between blocks it carries on to the next in that direction.
+        // on a wide screen the ship's log moves one block per scroll: when scrolling settles
+        // between blocks it carries on to the next in that direction. (A phone snaps natively,
+        // see placeSnaps: a fling there must not fly past a milestone before this could act.)
         snap: {
           snapTo: (value: number) => {
+            if (director.portrait) return value;
             const stops = director.snapStops();
             const p = director.timeAt(value);
             if (!st || stops.length < 2 || p < stops[0] - 0.012 || p > stops[stops.length - 1]) return value;
@@ -101,6 +123,7 @@ export function CinematicExperience({ onUnsupported }: Props) {
         },
         onRefresh: (self) => {
           target = self.progress;
+          placeSnaps(self);
         },
       });
       target = current = st.progress;
@@ -157,6 +180,8 @@ export function CinematicExperience({ onUnsupported }: Props) {
       ctx.revert();
       renderer.dispose();
       document.documentElement.style.removeProperty('--nav-glass');
+      for (const m of marks) m.remove();
+      document.documentElement.classList.remove('voyage-snap');
     };
   }, [onUnsupported]);
 

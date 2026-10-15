@@ -385,14 +385,35 @@ body {
 
 @media (max-aspect-ratio: 19/20) {
 
+  /* compact, so three or four milestones share the screen like a timeline */
   .log-item,
   .log-item[data-side='l'],
   .log-item[data-side='r'] {
-    width: 60vw;
+    width: 76vw;
     margin-left: 6vw;
     margin-right: 0;
-    margin-bottom: 5vh;
+    margin-bottom: 3.2vh;
     text-align: left;
+  }
+
+  .log-when {
+    margin-top: 0.15rem;
+    font-size: 1.3rem;
+  }
+
+  .log-title {
+    margin-top: 0.3rem;
+    font-size: 0.82rem;
+  }
+
+  .log-detail {
+    margin-top: 0.35rem;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .log-tags {
+    margin-top: 0.5rem;
   }
 
   .log-item[data-side='l'] .log-tags {
@@ -1729,4 +1750,18 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+/* ---- phone: the voyage past the helmet rests on each milestone (see CinematicExperience) ---- */
+html.voyage-snap {
+  scroll-snap-type: y proximity;
+}
+
+.snap-mark {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }

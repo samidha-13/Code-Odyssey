@@ -297,7 +297,8 @@ export class Director {
   }
 
   private logFocus() {
-    return this.portrait ? this.H * 0.27 : this.H * 0.5;
+    // on a phone the log reads down most of the screen, several milestones at once
+    return this.portrait ? this.H * 0.36 : this.H * 0.5;
   }
   private deckFocus() {
     return this.portrait ? this.H * 0.27 : this.H * 0.52;
@@ -600,7 +601,7 @@ export class Director {
     const hv = seg(p, ha, hb) * (1 - seg(p, hc, hd));
     css(T.logHeader, 'opacity', f3(hv));
     css(T.logHeader, 'visibility', hv > 0.001 ? 'visible' : 'hidden');
-    this.runTrack(T.logTrack, this.log, p, this.logFocus(), this.portrait ? [H * 0.16, H * 0.5] : [H * 0.16, H * 1.05], false);
+    this.runTrack(T.logTrack, this.log, p, this.logFocus(), this.portrait ? [H * 0.17, H * 0.94] : [H * 0.16, H * 1.05], false);
 
     // ---- about, allies and the invitation sail in with the ship
     css(T.deckScrim, 'opacity', f3(sstep(K.shipIn[0] + 0.02, K.deck.track[0] + 0.02, p)));
