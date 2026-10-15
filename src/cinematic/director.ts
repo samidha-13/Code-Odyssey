@@ -183,6 +183,8 @@ export class Director {
   portrait = false;
   private paperRect: Rect = [0, 0, 1, 1];
   private paperSet: 'd' | 'm' = 'd';
+  /** the shortlist's laid-out size before scaling onto the paper: wide on desktop, one column on a phone */
+  private noteSize: [number, number] = [700, 430];
   /** the hero film's first frame, held on its own texture to fade out of */
   private poster: Tex | null = null;
   /** something new arrived (an image, a resize) since the last frame was drawn */
@@ -321,9 +323,15 @@ export class Director {
     });
   }
 
-  /** where each block of the ship's log sits in focus, for scroll snapping */
-  deckStops() {
-    return this.deck.stops;
+  /**
+   * Where a scroll comes to rest, block by block. On a phone that is every
+   * milestone of the log, the inked paper and every block of the ship's log
+   * (the helmet before them scrolls freely); on a wide screen only the ship's log.
+   */
+  snapStops() {
+    if (!this.portrait) return this.deck.stops;
+    const paper = (K.ink[1] + K.paperOff[0]) / 2; // fully inked, before it blows away
+    return [...this.log.stops, paper, ...this.deck.stops];
   }
 
   /**
@@ -363,6 +371,9 @@ export class Director {
     this.atmos.resize(w, h, Math.min(dpr, 1.5));
     this.aboutLines = Array.from(this.texts.aboutTrack?.querySelectorAll<HTMLElement>('[data-line]') ?? []);
     this.inkLines = Array.from(this.texts.paperNote?.querySelectorAll<HTMLElement>('[data-ink]') ?? []);
+    // on a phone, fit the one-column list by its real size (desktop keeps its tuned box)
+    const inner = this.texts.paperNote?.querySelector<HTMLElement>('.paper-note-inner');
+    this.noteSize = this.portrait && inner?.offsetHeight ? [inner.offsetWidth, inner.offsetHeight * 1.06] : [700, 430];
     this.chapterP.about = K.about.in[1] + 0.02; // fully revealed
     this.measureTrack(this.texts.logTrack, this.log, this.logFocus());
     this.measureTrack(this.texts.deckTrack, this.deck, this.deckFocus());
@@ -572,7 +583,7 @@ export class Director {
         css(T.paperNote, 'transform', `translate3d(${f3(x0)}px, ${f3(y0)}px, 0)`);
         css(T.paperNote, 'width', `${f3(Math.max(10, x1 - x0))}px`);
         css(T.paperNote, 'height', `${f3(Math.max(10, y1 - y0))}px`);
-        css(T.paperNote, '--paper-scale', f3(Math.min((x1 - x0) / 700, (y1 - y0) / 430)));
+        css(T.paperNote, '--paper-scale', f3(Math.min((x1 - x0) / this.noteSize[0], (y1 - y0) / this.noteSize[1])));
         css(T.paperNote, 'opacity', f3(1 - gone));
         const n = this.inkLines.length;
         this.inkLines.forEach((el, i) => {

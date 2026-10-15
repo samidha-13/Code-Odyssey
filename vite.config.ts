@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       assetsInlineLimit: 0,
       // two pages: the voyage, and the problem statements beside it
-      rolldownOptions: { input: { main: 'index.html', ps: 'problem-statements.html' } },
+      rolldownOptions: { input: { main: 'index.html', ps: 'ps/index.html' } },
     },
   };
 });

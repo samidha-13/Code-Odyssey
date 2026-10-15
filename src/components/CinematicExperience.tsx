@@ -72,11 +72,12 @@ export function CinematicExperience({ onUnsupported }: Props) {
         pinSpacing: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
-        // the ship's log (voyage in numbers → join the crew) moves one block per scroll:
-        // when scrolling settles there, it carries on to the next block in that direction
+        // past the helmet, the voyage moves one block per scroll (on a phone: each milestone,
+        // the paper, each block of the ship's log; on a wide screen: the ship's log only).
+        // When scrolling settles between blocks it carries on to the next in that direction.
         snap: {
           snapTo: (value: number) => {
-            const stops = director.deckStops();
+            const stops = director.snapStops();
             const p = director.timeAt(value);
             if (!st || stops.length < 2 || p < stops[0] - 0.012 || p > stops[stops.length - 1]) return value;
             // already resting on a block (e.g. after a navbar jump to Sponsors): stay there
@@ -90,7 +91,8 @@ export function CinematicExperience({ onUnsupported }: Props) {
           },
           directional: false,
           delay: 0.04,
-          duration: { min: 0.25, max: 0.6 },
+          // long hops (the last milestone → the paper, past the bottle) get a little more time
+          duration: { min: 0.25, max: 0.9 },
           ease: 'power2.inOut',
           inertia: false,
         },

@@ -559,20 +559,36 @@ body {
 }
 
 .paper-teams {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  width: 100%;
-  max-width: 630px;
-  margin-inline: auto;
-}
-
-.paper-row {
+  margin: 10px auto 0;
+  padding: 0;
+  list-style: none;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(var(--rows, 8), auto);
+  grid-auto-flow: column;
   column-gap: 32px;
+  row-gap: 5px;
+  width: 100%;
+  max-width: 630px;
   text-align: left;
+}
+
+/* a phone's paper is narrow and tall: one column, laid out narrow so it scales up */
+@media (max-aspect-ratio: 19/20) {
+  .paper-note-inner {
+    width: 340px;
+  }
+  .paper-teams {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-flow: row;
+    width: max-content;
+    max-width: 100%;
+    row-gap: 7px;
+  }
+  .paper-eyebrow {
+    letter-spacing: 0.3em;
+  }
 }
 
 .paper-team {

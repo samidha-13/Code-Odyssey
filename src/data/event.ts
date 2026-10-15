@@ -116,8 +116,8 @@ export const EVENT = {
           'Entrepreneur pitches arrive as audio, text and PDFs in multiple regional languages, making evaluation slow. Build a tool that ingests any format, auto-translates, scores viability and adds local market context for assessors.',
       },
     ] as { id: string; title: string; track?: string; summary: string }[],
-    /** A page of its own, beside index.html (see vite.config.ts). */
-    href: 'problem-statements.html',
+    /** A page of its own at ps/ (ps/index.html, see vite.config.ts). */
+    href: 'ps/',
     submission: {
       deadlineISO: '2026-10-14T09:00:00+05:30',
       display: 'Wednesday, 14 October 2026 · 9:00 AM IST',

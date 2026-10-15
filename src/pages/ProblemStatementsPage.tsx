@@ -1,6 +1,7 @@
 import { SubmissionCountdown } from '../components/SubmissionCountdown';
 import { asset } from '../data/asset';
 import { EVENT } from '../data/event';
+import { useCountdown } from '../hooks/useCountdown';
 
 /**
  * A torn page with no ends (design/source-assets/paper/Problemstatements_background-removebg-preview.png),
@@ -17,10 +18,12 @@ const PAPER = 'assets/textures/ps-paper-tile.webp';
 export function ProblemStatementsPage() {
   const ps = EVENT.problemStatements;
   const released = ps.statements.length > 0;
+  // the form closes with the hourglass: past the deadline the button can't be pressed
+  const { done: closed } = useCountdown(ps.submission.deadlineISO, ps.submission.openedISO);
   return (
     <div className="ps-page" style={{ ['--grain' as string]: `url(${asset('assets/textures/grain.png')})` }}>
       <header className="ps-top">
-        <a className="ps-back" href="./">
+        <a className="ps-back" href={asset('')}>
           <svg width="18" height="10" viewBox="0 0 18 10" fill="none" aria-hidden="true">
             <path d="M18 5H2M6 1L2 5l4 4" stroke="currentColor" strokeWidth="1.2" />
           </svg>
@@ -82,12 +85,18 @@ export function ProblemStatementsPage() {
 
             {released && (
               <div data-ink="" className="ps-submit">
-                <a className="btn-voyage" href={ps.submission.formUrl} target="_blank" rel="noopener noreferrer">
-                  Submit Round 1
-                  <svg className="arrow" width="18" height="10" viewBox="0 0 18 10" fill="none" aria-hidden="true">
-                    <path d="M0 5h16M12 1l4 4-4 4" stroke="currentColor" strokeWidth="1.2" />
-                  </svg>
-                </a>
+                {closed ? (
+                  <button type="button" className="btn-voyage" data-state="closed" disabled>
+                    Submissions closed
+                  </button>
+                ) : (
+                  <a className="btn-voyage" href={ps.submission.formUrl} target="_blank" rel="noopener noreferrer">
+                    Submit Round 1
+                    <svg className="arrow" width="18" height="10" viewBox="0 0 18 10" fill="none" aria-hidden="true">
+                      <path d="M0 5h16M12 1l4 4-4 4" stroke="currentColor" strokeWidth="1.2" />
+                    </svg>
+                  </a>
+                )}
                 <p className="ps-policy">{ps.submission.policy}</p>
               </div>
             )}
